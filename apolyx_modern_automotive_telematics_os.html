@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APOLYX OS — Retrofit Fleet Telemetry & Diagnostic Core</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Modern Google Fonts: Space Grotesk, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: {
+              950: '#04060c',
+              900: '#080d19',
+              850: '#0d1424',
+              800: '#121b30',
+              700: '#1b2744',
+              border: 'rgba(255, 255, 255, 0.08)',
+              borderActive: 'rgba(0, 240, 144, 0.35)'
+            },
+            cyber: {
+              neon: '#00f090',
+              teal: '#00d2ff',
+              amber: '#ffb300',
+              crimson: '#ff3366',
+              violet: '#a855f7'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Ultra-sleek dark scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #04060c; }
+    ::-webkit-scrollbar-thumb { background: #1b2744; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00f090; }
+
+    /* Precision Grid Matrix */
+    .bg-grid-cyber {
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 144, 0.08) 0%, transparent 60%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+    }
+
+    /* Modern Glass Card */
+    .glass-panel {
+      background: linear-gradient(135deg, rgba(13, 20, 36, 0.85) 0%, rgba(8, 13, 25, 0.92) 100%);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .glass-panel:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    .glass-panel-glow {
+      box-shadow: 0 0 25px -8px rgba(0, 240, 144, 0.15);
+    }
+
+    /* Tabular numeric spacing for zero jitter */
+    .num-tabular { font-variant-numeric: tabular-nums; }
+
+    /* Pulsing radar dot */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 0; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .animate-pulse-ring {
+      animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-obsidian-950 text-slate-200 font-sans antialiased min-h-screen flex flex-col selection:bg-cyber-neon selection:text-black bg-grid-cyber">
+
+  <!-- TOP COCKPIT COMMAND BAR -->
+  <header class="bg-obsidian-900/80 backdrop-blur-2xl border-b border-obsidian-border sticky top-0 z-40">
+    <div class="max-w-[1500px] mx-auto px-4 sm:px-6 py-2.5">
+      <div class="flex items-center justify-between gap-4">
+        
+        <!-- Brand & Protocol Identity -->
+        <div class="flex items-center space-x-3.5 shrink-0">
+          <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-obsidian-850 border border-cyber-neon/40 shadow-[0_0_15px_rgba(0,240,144,0.25)]">
+            <i class="fa-solid fa-bolt text-cyber-neon text-base"></i>
+            <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-cyber-neon rounded-full animate-ping"></span>
+            <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-cyber-neon rounded-full"></span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-display font-extrabold text-xl tracking-tight text-white">APOLYX</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-neon/10 text-cyber-neon border border-cyber-neon/25 font-semibold uppercase tracking-wider">RETROFIT OS 2.8</span>
+              <span class="hidden md:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-slate-400 border border-white/10">SIH-26220</span>
+            </div>
+            <p class="text-[11px] text-slate-400 font-medium tracking-tight flex items-center gap-2">
+              <span>Non-Intrusive CAN Sniffer</span>
+              <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+              <span class="text-cyber-neon font-mono">TX Cut (Passive Read-Only)</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Real-Time Hardware Ticker Strip -->
+        <div class="hidden xl:flex items-center space-x-3 text-xs font-mono">
+          <!-- Connection Status -->
+          <div class="glass-panel px-3 py-1.5 rounded-lg flex items-center space-x-2.5">
+            <span class="relative flex h-2 w-2">
+              <span id="connPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-neon opacity-75"></span>
+              <span id="connDot" class="relative inline-flex rounded-full h-2 w-2 bg-cyber-neon"></span>
+            </span>
+            <span id="connText" class="text-slate-300 font-semibold text-[11px]">4G MQTT LINK</span>
+            <span class="text-slate-500">•</span>
+            <span id="pingRate" class="text-cyber-neon text-[11px] font-semibold num-tabular">12ms</span>
+          </div>
+
+          <!-- MicroSD FIFO Queue -->
+          <div class="glass-panel px-3 py-1.5 rounded-lg flex items-center space-x-2">
+            <i class="fa-solid fa-microchip text-slate-400 text-xs"></i>
+            <span class="text-slate-400 text-[11px]">FAT32 Queue:</span>
+            <span id="sdBufferCount" class="text-white font-bold num-tabular">0 pkts</span>
+          </div>
+
+          <!-- E20 Fuel Sensor Mode -->
+          <div class="glass-panel px-3 py-1.5 rounded-lg flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-cyber-amber"></span>
+            <span class="text-slate-400 text-[11px]">Fuel Model:</span>
+            <span class="text-cyber-amber font-semibold text-[11px]">E20 AFR (14.02:1)</span>
+          </div>
+        </div>
+
+        <!-- Vehicle Asset Switcher & Quick Floating Actions -->
+        <div class="flex items-center space-x-2.5">
+          <div class="relative">
+            <select id="vehicleSelector" class="bg-obsidian-850 border border-white/10 text-white text-xs rounded-lg pl-3 pr-8 py-2 focus:border-cyber-neon focus:outline-none cursor-pointer font-mono font-semibold appearance-none hover:border-white/20 transition">
+              <option value="AP-TRUCK-101">Tata Prima 4028.S (Heavy Haul)</option>
+              <option value="AP-BUS-204">Ashok Leyland Viking (Transit)</option>
+              <option value="AP-VAN-309">Mahindra Bolero Maxi (Urban)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-[10px] text-slate-400 pointer-events-none"></i>
+          </div>
+
+          <button id="simModalBtn" class="bg-gradient-to-r from-cyber-neon/20 to-cyber-teal/20 hover:from-cyber-neon/30 hover:to-cyber-teal/30 text-white text-xs font-semibold px-3 py-2 rounded-lg border border-cyber-neon/40 shadow-sm shadow-cyber-neon/10 transition flex items-center gap-2">
+            <i class="fa-solid fa-gamepad text-cyber-neon text-xs"></i>
+            <span class="hidden sm:inline">Telemetry Sandbox</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modern Segmented Navigation Tabs -->
+      <nav class="flex overflow-x-auto gap-1.5 pt-2.5 mt-1 border-t border-obsidian-border text-xs font-mono scrollbar-none" aria-label="Tabs">
+        <button class="nav-tab active-tab px-3.5 py-1.5 rounded-lg text-black font-bold bg-cyber-neon flex items-center gap-2 shrink-0 transition" data-tab="tab-cockpit">
+          <i class="fa-solid fa-gauge-high text-xs"></i> 01 // COCKPIT HUD
+        </button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-850 flex items-center gap-2 shrink-0 transition" data-tab="tab-fuel">
+          <i class="fa-solid fa-gas-pump text-cyber-amber text-xs"></i> 02 // E20 FUEL MATRIX
+        </button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-850 flex items-center gap-2 shrink-0 transition" data-tab="tab-dtc">
+          <i class="fa-solid fa-bug-slash text-cyber-crimson text-xs"></i> 03 // DTC DIAGNOSTICS
+        </button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-850 flex items-center gap-2 shrink-0 transition" data-tab="tab-dynamics">
+          <i class="fa-solid fa-crosshairs text-cyber-teal text-xs"></i> 04 // G-FORCE DYNAMICS
+        </button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-850 flex items-center gap-2 shrink-0 transition" data-tab="tab-hardware">
+          <i class="fa-solid fa-server text-slate-300 text-xs"></i> 05 // ESP32 EDGE ARCH
+        </button>
+        <button class="nav-tab px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-850 flex items-center gap-2 shrink-0 transition" data-tab="tab-advisory">
+          <i class="fa-solid fa-microchip-ai text-cyber-neon text-xs"></i> 06 // PREDICTIVE AI ENGINE
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+    <!-- Active Hardware Warning Banner -->
+    <div id="activeAlertBanner" class="hidden rounded-xl border border-cyber-crimson/40 bg-gradient-to-r from-cyber-crimson/15 to-obsidian-900 px-4 py-3 backdrop-blur-xl transition flex items-start justify-between shadow-2xl shadow-cyber-crimson/10">
+      <div class="flex items-start space-x-3.5">
+        <div class="w-8 h-8 rounded-lg bg-cyber-crimson/25 text-cyber-crimson border border-cyber-crimson/40 flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">
+          <i class="fa-solid fa-radiation"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="alertBannerTitle" class="font-display font-bold text-white text-xs tracking-wider uppercase">TELEMETRY ANOMALY DETECTED</span>
+            <span id="alertBannerBadge" class="text-[9px] font-mono px-2 py-0.5 rounded bg-cyber-crimson/30 text-cyber-crimson font-bold uppercase border border-cyber-crimson/50">CRITICAL BUS ALERT</span>
+          </div>
+          <p id="alertBannerMsg" class="text-xs text-slate-300 mt-1">Abnormal float level decrement during engine key-off state.</p>
+        </div>
+      </div>
+      <button onclick="dismissBanner()" class="text-slate-400 hover:text-white p-1 text-xs transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: MODERN COCKPIT HUD & DIGITAL TWIN   -->
+    <!-- ========================================== -->
+    <section id="tab-cockpit" class="tab-content block space-y-4">
+      
+      <!-- Primary Instruments Dual Gauge Deck -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        
+        <!-- Speedometer Gauge Card -->
+        <div class="glass-panel rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyber-neon animate-ping"></span>
+              PID 0x0D // VEHICLE SPEED
+            </span>
+            <span id="speedIndicatorTag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-neon/15 text-cyber-neon border border-cyber-neon/30 font-semibold">NOMINAL</span>
+          </div>
+
+          <div class="my-4 flex items-center justify-center relative">
+            <!-- Circular SVG Tach Arc -->
+            <svg class="w-44 h-44 -rotate-90 transform" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" stroke="rgba(255,255,255,0.06)" stroke-width="8" fill="none"/>
+              <circle id="speedArc" cx="60" cy="60" r="50" stroke="#00f090" stroke-width="8" stroke-dasharray="314.15" stroke-dashoffset="160" stroke-linecap="round" fill="none" class="transition-all duration-300"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span id="kpiSpeed" class="text-5xl font-display font-extrabold text-white tracking-tighter num-tabular">58</span>
+              <span class="text-xs font-mono text-slate-400 tracking-wider uppercase font-semibold">KM / H</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-2 border-t border-white/5">
+            <span>Fleet Limit: 80 km/h</span>
+            <span>Throttle: <span id="hudThrottle" class="text-white font-bold">18%</span></span>
+          </div>
+        </div>
+
+        <!-- Engine RPM Tachometer Card -->
+        <div class="glass-panel rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyber-teal"></span>
+              PID 0x0C // ENGINE RPM
+            </span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-teal/15 text-cyber-teal border border-cyber-teal/30 font-semibold">CRUISE SWEETSPOT</span>
+          </div>
+
+          <div class="my-4 flex items-center justify-center relative">
+            <svg class="w-44 h-44 -rotate-90 transform" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" stroke="rgba(255,255,255,0.06)" stroke-width="8" fill="none"/>
+              <circle id="rpmArc" cx="60" cy="60" r="50" stroke="#00d2ff" stroke-width="8" stroke-dasharray="314.15" stroke-dashoffset="180" stroke-linecap="round" fill="none" class="transition-all duration-300"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span id="kpiRpm" class="text-4xl font-display font-extrabold text-white tracking-tighter num-tabular">1,820</span>
+              <span class="text-xs font-mono text-slate-400 tracking-wider uppercase font-semibold">RPM</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-2 border-t border-white/5">
+            <span>Redline: 3,800 RPM</span>
+            <span>Load: <span id="hudLoad" class="text-white font-bold">34%</span></span>
+          </div>
+        </div>
+
+        <!-- Fuel Level & Range Deck -->
+        <div class="glass-panel rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyber-amber"></span>
+              PID 0x2F // FUEL LEVEL
+            </span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-amber/15 text-cyber-amber border border-cyber-amber/30 font-semibold">E20 MONITORED</span>
+          </div>
+
+          <div class="my-3">
+            <div class="flex items-baseline justify-between mb-2">
+              <div class="flex items-baseline space-x-1.5">
+                <span id="kpiFuel" class="text-5xl font-display font-extrabold text-white tracking-tighter num-tabular">68.4</span>
+                <span class="text-sm font-mono text-slate-400">%</span>
+              </div>
+              <div class="text-right font-mono text-xs">
+                <span class="text-slate-400 block text-[10px]">Range</span>
+                <span id="kpiRange" class="text-cyber-amber font-bold text-base num-tabular">342 km</span>
+              </div>
+            </div>
+
+            <!-- Segmented Fuel Bar -->
+            <div class="w-full bg-obsidian-950 h-3 rounded-md overflow-hidden p-0.5 border border-white/10 flex gap-0.5">
+              <div id="fuelBarSegment" class="bg-gradient-to-r from-cyber-amber via-yellow-400 to-cyber-neon h-full rounded-sm transition-all duration-500" style="width: 68%;"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[11px] font-mono">
+            <div class="bg-obsidian-950/70 p-2 rounded-lg border border-white/5">
+              <span class="text-slate-500 block text-[9px] uppercase">Burn Rate</span>
+              <span id="hudBurnRate" class="text-slate-200 font-bold">3.8 L/hr</span>
+            </div>
+            <div class="bg-obsidian-950/70 p-2 rounded-lg border border-white/5">
+              <span class="text-slate-500 block text-[9px] uppercase">MAF Flow</span>
+              <span id="hudMaf" class="text-slate-200 font-bold">22.4 g/s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver Safety & Powertrain Score -->
+        <div class="glass-panel rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyber-neon"></span>
+              SAFETY & BEHAVIOR
+            </span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">GRADE A</span>
+          </div>
+
+          <div class="my-3 flex items-center justify-between">
+            <div>
+              <div class="flex items-baseline space-x-1.5">
+                <span id="kpiDriverScore" class="text-5xl font-display font-extrabold text-white tracking-tighter num-tabular">91</span>
+                <span class="text-sm font-mono text-slate-400">/ 100</span>
+              </div>
+              <p class="text-[11px] text-slate-400 font-mono mt-1">Harsh Decel: <span id="kpiHarshCount" class="text-cyber-crimson font-bold">1</span></p>
+            </div>
+            <div class="w-16 h-16 rounded-full border-2 border-cyber-neon/40 flex items-center justify-center bg-cyber-neon/5 shadow-[0_0_20px_rgba(0,240,144,0.15)]">
+              <i class="fa-solid fa-shield-halved text-cyber-neon text-2xl"></i>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
+            <span>DTC Faults: <span id="kpiDtcBadge" class="text-cyber-crimson font-bold">1 Active</span></span>
+            <span>Idling: <span id="kpiIdleMins" class="text-slate-200 font-bold">42m</span></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- High Frequency Waveform Chart & GPS Map Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        <!-- Live Waveform Time-Series -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display font-bold text-white text-base tracking-tight">CAN-Bus High-Frequency Telemetry Stream</h3>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-cyber-neon border border-cyber-neon/30">10 Hz REALTIME</span>
+              </div>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">MCP2515 SPI Bus • PID 0x0D (Speed), 0x0C (RPM), 0x11 (Throttle)</p>
+            </div>
+
+            <!-- Legend Pills -->
+            <div class="flex items-center space-x-2 text-[11px] font-mono">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-obsidian-950 border border-white/10 text-cyber-neon font-semibold">
+                <span class="w-2 h-2 rounded-full bg-cyber-neon"></span> Speed (km/h)
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-obsidian-950 border border-white/10 text-cyber-teal font-semibold">
+                <span class="w-2 h-2 rounded-full bg-cyber-teal"></span> RPM / 50
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-obsidian-950 border border-white/10 text-cyber-amber font-semibold">
+                <span class="w-2 h-2 rounded-full bg-cyber-amber"></span> Throttle %
+              </span>
+            </div>
+          </div>
+
+          <div class="h-64 w-full relative">
+            <canvas id="telemetryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Real-Time Vector Route Visualizer -->
+        <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="font-display font-bold text-white text-sm">NEO-6M Satellite Navigation</h3>
+                <p class="text-[11px] text-slate-400 font-mono">19.0760° N, 72.8777° E • NH-48 Corridor</p>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-cyber-neon border border-emerald-500/30 font-semibold">
+                3D FIX (9 SATS)
+              </span>
+            </div>
+
+            <!-- Animated Canvas Route Radar -->
+            <div class="relative w-full h-44 bg-obsidian-950 rounded-xl overflow-hidden border border-white/10 shadow-inner">
+              <canvas id="routeCanvas" class="w-full h-full"></canvas>
+              <div class="absolute bottom-2 left-2 bg-obsidian-900/90 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 text-[10px] font-mono text-slate-300 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyber-neon animate-ping"></span>
+                <span>Active Geo-Fence: <strong class="text-white">Maharashtra Sector 4</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secondary Sub-Bus PIDs -->
+          <div class="grid grid-cols-3 gap-2 mt-3 font-mono text-center">
+            <div class="bg-obsidian-950/80 p-2 rounded-lg border border-white/5">
+              <span class="text-[9px] text-slate-500 block uppercase">Coolant (0x05)</span>
+              <span id="microCoolant" class="text-xs font-bold text-white num-tabular">89 °C</span>
+            </div>
+            <div class="bg-obsidian-950/80 p-2 rounded-lg border border-white/5">
+              <span class="text-[9px] text-slate-500 block uppercase">MAP (0x0B)</span>
+              <span id="microMap" class="text-xs font-bold text-white num-tabular">101 kPa</span>
+            </div>
+            <div class="bg-obsidian-950/80 p-2 rounded-lg border border-white/5">
+              <span class="text-[9px] text-slate-500 block uppercase">OBD Voltage</span>
+              <span id="microVoltage" class="text-xs font-bold text-white num-tabular">14.1 V</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live CAN Sniffer Hex Terminal -->
+      <div class="glass-panel rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyber-neon"></span>
+            <span class="font-bold text-white">MCP2515 CAN BUS SNIFFER LOG (RAW SAE J1979 FRAMES)</span>
+          </div>
+          <span class="text-slate-500 text-[11px]">Baud: 500 kbps • Filter: 0x7DF / 0x7E8</span>
+        </div>
+        <div id="canHexStream" class="h-20 bg-obsidian-950 p-2.5 rounded-lg border border-white/5 font-mono text-[11px] text-slate-400 overflow-y-auto space-y-0.5">
+          <div><span class="text-slate-600">[00:00:01.102]</span> <span class="text-cyber-neon">RX 0x7E8</span> 03 41 0D 3A 00 00 00 00 <span class="text-slate-500">| PID 0x0D Speed = 58 km/h</span></div>
+          <div><span class="text-slate-600">[00:00:01.204]</span> <span class="text-cyber-teal">RX 0x7E8</span> 04 41 0C 1C 70 00 00 00 <span class="text-slate-500">| PID 0x0C RPM = 1820 RPM</span></div>
+          <div><span class="text-slate-600">[00:00:01.305]</span> <span class="text-cyber-amber">RX 0x7E8</span> 03 41 2F AF 00 00 00 00 <span class="text-slate-500">| PID 0x2F Fuel = 68.4%</span></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: FUEL INTELLIGENCE & E20 MATRIX      -->
+    <!-- ========================================== -->
+    <section id="tab-fuel" class="tab-content hidden space-y-4">
+      
+      <!-- E20 Engineering Deep-Dive Card -->
+      <div class="glass-panel rounded-2xl p-6 relative overflow-hidden">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-3xl">
+            <div class="flex items-center gap-2.5">
+              <span class="px-2.5 py-1 rounded-md bg-cyber-amber/20 text-cyber-amber font-mono text-xs font-bold border border-cyber-amber/40">
+                E20 ETHANOL BLEND AWARENESS
+              </span>
+              <h3 class="font-display font-bold text-white text-lg">Fuel-Type-Aware Volumetric Consumption Compensator</h3>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Commercial E20 fuel shifts the baseline stoichiometric air-to-fuel ratio from <strong>14.7:1 (E0 Pure Petrol)</strong> to <strong>~14.02:1 (E20)</strong>, creating an expected ~3.5% volumetric penalty. Without APOLYX’s Short/Long Term Fuel Trim (STFT/LTFT) correlation, conventional telematics trigger false fuel theft alerts or misdiagnose fuel injector degradation.
+            </p>
+          </div>
+
+          <!-- Dynamic Stoichiometric Gauge Display -->
+          <div class="glass-panel bg-obsidian-950 p-4 rounded-xl border border-white/10 shrink-0 font-mono text-xs space-y-2">
+            <div class="flex justify-between gap-6">
+              <span class="text-slate-400">Current Target AFR:</span>
+              <span class="text-cyber-amber font-bold text-sm">14.02 : 1</span>
+            </div>
+            <div class="flex justify-between gap-6">
+              <span class="text-slate-400">Long-Term Trim (LTFT):</span>
+              <span class="text-cyber-neon font-bold text-sm">+4.8 %</span>
+            </div>
+            <div class="flex justify-between gap-6">
+              <span class="text-slate-400">Ethanol Inferred Ratio:</span>
+              <span class="text-white font-bold text-sm">19.4 % Vol</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trajectory Chart & Idle Fuel Waste Analyzer -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        <!-- Fuel Trajectory vs Theoretical Model -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-display font-bold text-white text-base">Fuel Tank Float Trajectory vs Expected Consumption</h3>
+              <p class="text-xs text-slate-400 font-mono">Correlates float level (PID 0x2F) against integrated MAF/MAP engine burn</p>
+            </div>
+            <button onclick="injectFuelLossAnomaly()" class="text-xs bg-cyber-crimson/20 hover:bg-cyber-crimson/30 text-cyber-crimson border border-cyber-crimson/40 px-3 py-1.5 rounded-lg transition font-mono font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation"></i> Simulate Siphon Theft
+            </button>
+          </div>
+          <div class="h-64 w-full relative">
+            <canvas id="fuelTrajectoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Stationary Idle Waste Meter -->
+        <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between">
+              <h3 class="font-display font-bold text-white text-sm">Stationary Idling Financial Leak</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-crimson/20 text-cyber-crimson border border-cyber-crimson/40 font-bold">LOSS DETECTED</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 font-mono">Engine operational @ 0 km/h with parking brake engaged</p>
+
+            <div class="mt-4 p-4 rounded-xl bg-obsidian-950 border border-white/5 space-y-3 font-mono text-xs">
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">Total Idle Time:</span>
+                <span id="idleTime" class="font-bold text-cyber-crimson text-sm">42 mins</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">Fuel Burned in Idle:</span>
+                <span id="idleFuelWasted" class="font-bold text-cyber-amber text-sm">1.82 Litres</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400">Avoidable Cost Waste:</span>
+                <span id="idleCostWasted" class="font-bold text-white text-base">₹ 174.70</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sensor Fallback Architecture Info -->
+          <div class="bg-obsidian-950/80 p-3.5 rounded-xl border border-white/5 text-xs space-y-1.5">
+            <div class="flex items-center justify-between font-mono">
+              <span class="text-slate-200 font-semibold">Sensor Fallback Active</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyber-neon/15 text-cyber-neon font-bold">AUTOMATIC</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed font-mono">
+              Older commercial fleets lack direct Fuel Rate (PID 0x5E). Apolyx automatically falls back to calculating instantaneous burn via Mass Air Flow (PID 0x10) and engine displacement formulas.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fuel Anomaly Audit Table -->
+      <div class="glass-panel rounded-2xl p-5">
+        <h4 class="font-display font-bold text-white text-sm mb-3">Fuel Events & Anomaly Audit Trail</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead>
+              <tr class="border-b border-white/10 text-slate-400 text-[11px]">
+                <th class="py-2.5 px-3">TIMESTAMP</th>
+                <th class="py-2.5 px-3">EVENT TYPE</th>
+                <th class="py-2.5 px-3">VOLUME DELTA</th>
+                <th class="py-2.5 px-3">ENGINE SPEED</th>
+                <th class="py-2.5 px-3">GPS LOCATION</th>
+                <th class="py-2.5 px-3">STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="fuelAnomalyTbody" class="divide-y divide-white/5 text-slate-300">
+              <tr>
+                <td class="py-2.5 px-3">Today, 07:15:22</td>
+                <td class="py-2.5 px-3 text-cyber-amber">Prolonged Idle Drain</td>
+                <td class="py-2.5 px-3 font-bold text-cyber-amber">-0.7 L</td>
+                <td class="py-2.5 px-3">0 km/h (Stationary)</td>
+                <td class="py-2.5 px-3 text-slate-400">Panvel Depot Gate 3</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">Logged</span></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3">Yesterday, 23:42:10</td>
+                <td class="py-2.5 px-3 text-cyber-neon">Refueling Confirmation</td>
+                <td class="py-2.5 px-3 font-bold text-cyber-neon">+45.0 L</td>
+                <td class="py-2.5 px-3">Key Off (0 RPM)</td>
+                <td class="py-2.5 px-3 text-slate-400">IOCL Hub #14</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-cyber-neon/15 text-cyber-neon border border-cyber-neon/30">Verified</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: DIAGNOSTICS & DTC TROUBLE CODES     -->
+    <!-- ========================================== -->
+    <section id="tab-dtc" class="tab-content hidden space-y-4">
+      
+      <!-- Diagnostic KPI Header Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
+        <div class="glass-panel rounded-xl p-4 flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-lg bg-cyber-crimson/20 border border-cyber-crimson/40 text-cyber-crimson flex items-center justify-center text-base font-bold">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <span class="text-[11px] text-slate-400 uppercase block">Active Trouble Codes</span>
+            <span id="dtcCount" class="text-2xl font-display font-bold text-cyber-crimson">1 Code</span>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4 flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-lg bg-cyber-neon/20 border border-cyber-neon/40 text-cyber-neon flex items-center justify-center text-base font-bold">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div>
+            <span class="text-[11px] text-slate-400 uppercase block">Powertrain Health Index</span>
+            <span class="text-2xl font-display font-bold text-cyber-neon">88 %</span>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4 flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-lg bg-cyber-teal/20 border border-cyber-teal/40 text-cyber-teal flex items-center justify-center text-base font-bold">
+            <i class="fa-solid fa-network-wired"></i>
+          </div>
+          <div>
+            <span class="text-[11px] text-slate-400 uppercase block">Protocol Interface</span>
+            <span class="text-xs font-semibold text-white">ISO 15765-4 (CAN 500k)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active DTC Fault Inspector Card -->
+      <div class="glass-panel rounded-2xl p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div>
+            <h3 class="font-display font-bold text-white text-base">Active Diagnostic Trouble Codes (DTC)</h3>
+            <p class="text-xs text-slate-400 font-mono">SAE J1979 Mode 03 inspection mapped to mechanical root cause</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="simulateAddDtc()" class="text-xs bg-obsidian-850 hover:bg-obsidian-800 text-slate-200 px-3 py-1.5 rounded-lg border border-white/10 transition font-mono font-semibold flex items-center gap-1.5">
+              <i class="fa-solid fa-plus text-cyber-crimson"></i> Inject Fault (P0300)
+            </button>
+            <button onclick="clearDtcs()" class="text-xs bg-cyber-neon/15 hover:bg-cyber-neon/25 text-cyber-neon border border-cyber-neon/30 px-3 py-1.5 rounded-lg transition font-mono font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-rotate-left"></i> Mode 04 Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- DTC List Container -->
+        <div id="dtcList" class="space-y-3">
+          <!-- Item: P0171 -->
+          <div class="p-4 rounded-xl bg-obsidian-950 border border-cyber-amber/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-start space-x-3.5">
+              <span class="px-2.5 py-1 rounded-md bg-cyber-amber/20 text-cyber-amber font-mono font-bold text-xs border border-cyber-amber/40">P0171</span>
+              <div>
+                <h4 class="font-semibold text-white text-sm">System Too Lean (Bank 1)</h4>
+                <p class="text-xs text-slate-400 mt-0.5">Air-to-fuel ratio exceeds threshold. Possible vacuum leak, unmetered air duct rupture, or dirty MAF sensor.</p>
+                <div class="flex items-center space-x-4 mt-2 text-[11px] font-mono text-slate-400">
+                  <span>Freeze frame: <strong class="text-white">RPM: 1840 | Coolant: 88°C</strong></span>
+                  <span>Fuel Penalty: <strong class="text-cyber-amber font-bold">+8% Overconsumption</strong></span>
+                </div>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <button onclick="consultDiagnosticsForDtc('P0171')" class="px-3 py-1.5 bg-obsidian-850 hover:bg-obsidian-800 text-white border border-white/10 rounded-lg text-xs font-mono font-semibold transition">
+                Diagnostic Analysis &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time OBD PID Matrix Grid -->
+      <div class="glass-panel rounded-2xl p-5">
+        <h4 class="font-display font-bold text-white text-sm mb-3">Live Standard OBD-II Parameter ID (PID) Matrix</h4>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-mono">
+          <div class="p-3 bg-obsidian-950 rounded-xl border border-white/5">
+            <span class="text-[10px] text-slate-500 block">PID 0x04</span>
+            <span class="text-slate-400 block text-[11px]">Engine Load</span>
+            <span id="pidLoad" class="text-base font-bold text-cyber-neon mt-1 block num-tabular">34 %</span>
+          </div>
+          <div class="p-3 bg-obsidian-950 rounded-xl border border-white/5">
+            <span class="text-[10px] text-slate-500 block">PID 0x05</span>
+            <span class="text-slate-400 block text-[11px]">Coolant Temp</span>
+            <span id="pidCoolant" class="text-base font-bold text-cyber-neon mt-1 block num-tabular">89 °C</span>
+          </div>
+          <div class="p-3 bg-obsidian-950 rounded-xl border border-white/5">
+            <span class="text-[10px] text-slate-500 block">PID 0x0E</span>
+            <span class="text-slate-400 block text-[11px]">Timing Advance</span>
+            <span id="pidTiming" class="text-base font-bold text-cyber-teal mt-1 block num-tabular">14.5 °</span>
+          </div>
+          <div class="p-3 bg-obsidian-950 rounded-xl border border-white/5">
+            <span class="text-[10px] text-slate-500 block">PID 0x0F</span>
+            <span class="text-slate-400 block text-[11px]">Intake Temp</span>
+            <span id="pidIntake" class="text-base font-bold text-cyber-teal mt-1 block num-tabular">32 °C</span>
+          </div>
+          <div class="p-3 bg-obsidian-950 rounded-xl border border-white/5">
+            <span class="text-[10px] text-slate-500 block">PID 0x10</span>
+            <span class="text-slate-400 block text-[11px]">MAF Air Flow</span>
+            <span id="pidMaf" class="text-base font-bold text-cyber-amber mt-1 block num-tabular">22.4 g/s</span>
+          </div>
+          <div class="p-3 bg-obsidian-950 rounded-xl border border-white/5">
+            <span class="text-[10px] text-slate-500 block">PID 0x11</span>
+            <span class="text-slate-400 block text-[11px]">Throttle Position</span>
+            <span id="pidThrottle" class="text-base font-bold text-cyber-neon mt-1 block num-tabular">18 %</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: VEHICLE DYNAMICS & G-FORCE RADAR    -->
+    <!-- ========================================== -->
+    <section id="tab-dynamics" class="tab-content hidden space-y-4">
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono">
+        <div class="glass-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Composite Safety Index</span>
+          <div class="flex items-baseline space-x-2 mt-1">
+            <span class="text-3xl font-display font-bold text-cyber-neon">91</span>
+            <span class="text-xs text-slate-400">/ 100</span>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Harsh Braking Events</span>
+          <div class="flex items-baseline space-x-2 mt-1">
+            <span id="driverBrakes" class="text-3xl font-display font-bold text-white num-tabular">1</span>
+            <span class="text-xs text-slate-500">&gt; 0.45 G</span>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Rapid Accelerations</span>
+          <div class="flex items-baseline space-x-2 mt-1">
+            <span id="driverAccels" class="text-3xl font-display font-bold text-white num-tabular">0</span>
+            <span class="text-xs text-slate-500">&gt; 0.35 G</span>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Speed Violation Ratio</span>
+          <div class="flex items-baseline space-x-2 mt-1">
+            <span class="text-3xl font-display font-bold text-cyber-neon num-tabular">0.4%</span>
+            <span class="text-xs text-slate-500">Trip duration</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-Axis IMU Traction Circle & Score Breakdown -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- MPU-6050 Kamm's Traction Circle Radar -->
+        <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-display font-bold text-white text-base">MPU-6050 Inertial Traction Circle (G-G Diagram)</h3>
+              <p class="text-xs text-slate-400 font-mono">Real-time lateral vs longitudinal dynamic load distribution</p>
+            </div>
+            <button onclick="triggerHarshBrakeSim()" class="text-xs bg-cyber-amber/15 hover:bg-cyber-amber/25 text-cyber-amber border border-cyber-amber/40 px-3 py-1.5 rounded-lg transition font-mono font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-radiation"></i> Trigger Harsh Brake
+            </button>
+          </div>
+
+          <div class="relative w-full h-72 bg-obsidian-950 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center">
+            <canvas id="imuCanvas" width="320" height="280"></canvas>
+            <div class="absolute bottom-3 right-3 text-right font-mono text-[10px] text-slate-300 bg-obsidian-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 space-y-0.5">
+              <div>Lateral (X): <span id="imuX" class="text-cyber-neon font-bold">+0.04 G</span></div>
+              <div>Longitudinal (Y): <span id="imuY" class="text-cyber-teal font-bold">-0.08 G</span></div>
+              <div>Vertical (Z): <span id="imuZ" class="text-slate-300 font-bold">+0.98 G</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Behavioral Scoring Breakdown -->
+        <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="font-display font-bold text-white text-base mb-1">Explainable Driver Behavioral Model</h3>
+            <p class="text-xs text-slate-400 font-mono mb-4">Rule-based scoring correlating IMU vectors with throttle transients</p>
+
+            <div class="space-y-3.5 font-mono text-xs">
+              <div>
+                <div class="flex justify-between text-slate-300 mb-1">
+                  <span>Smooth Braking & Acceleration</span>
+                  <span class="text-cyber-neon font-bold">94 / 100</span>
+                </div>
+                <div class="w-full bg-obsidian-950 h-2 rounded-full overflow-hidden border border-white/5">
+                  <div class="bg-cyber-neon h-full rounded-full" style="width: 94%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-slate-300 mb-1">
+                  <span>Speed Limit Compliance (80 km/h)</span>
+                  <span class="text-cyber-neon font-bold">98 / 100</span>
+                </div>
+                <div class="w-full bg-obsidian-950 h-2 rounded-full overflow-hidden border border-white/5">
+                  <div class="bg-cyber-neon h-full rounded-full" style="width: 98%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-slate-300 mb-1">
+                  <span>RPM Band & Shift Efficiency</span>
+                  <span class="text-cyber-teal font-bold">86 / 100</span>
+                </div>
+                <div class="w-full bg-obsidian-950 h-2 rounded-full overflow-hidden border border-white/5">
+                  <div class="bg-cyber-teal h-full rounded-full" style="width: 86%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-slate-300 mb-1">
+                  <span>Stationary Idle Minimization</span>
+                  <span class="text-cyber-amber font-bold">76 / 100</span>
+                </div>
+                <div class="w-full bg-obsidian-950 h-2 rounded-full overflow-hidden border border-white/5">
+                  <div class="bg-cyber-amber h-full rounded-full" style="width: 76%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3.5 bg-obsidian-950 rounded-xl border border-white/5 text-xs">
+            <span class="text-white font-bold block mb-1 font-mono">Driver Operational Recommendation:</span>
+            <p class="text-slate-400 text-[11px] leading-relaxed">
+              Target engine shut-down during extended warehouse gate queues (&gt; 3 mins). Eliminating stationary idle would save approximately ₹5,200/month per vehicle in unburned fuel.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: ESP32 EDGE ARCH & LOCAL BUFFERING   -->
+    <!-- ========================================== -->
+    <section id="tab-hardware" class="tab-content hidden space-y-4">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        <!-- Hardware Specs Sheet -->
+        <div class="glass-panel rounded-2xl p-5 space-y-3 font-mono text-xs">
+          <div class="flex items-center space-x-3 pb-2 border-b border-white/10">
+            <div class="w-10 h-10 rounded-xl bg-obsidian-950 border border-cyber-neon/40 text-cyber-neon flex items-center justify-center font-bold text-base">
+              <i class="fa-solid fa-microchip"></i>
+            </div>
+            <div>
+              <h3 class="font-display font-bold text-white text-sm">APOLYX Retrofit Hardware Node</h3>
+              <p class="text-[11px] text-slate-400">ESP32-WROOM-32 Core</p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
+              <span class="text-slate-400">Processor:</span>
+              <span class="text-white font-bold">Dual Xtensa LX6 @ 240MHz</span>
+            </div>
+            <div class="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
+              <span class="text-slate-400">CAN Controller:</span>
+              <span class="text-white font-bold">MCP2515 (SPI @ 10MHz)</span>
+            </div>
+            <div class="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
+              <span class="text-slate-400">Motion IMU:</span>
+              <span class="text-white font-bold">MPU-6050 (6-Axis I2C)</span>
+            </div>
+            <div class="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
+              <span class="text-slate-400">GNSS Receiver:</span>
+              <span class="text-white font-bold">u-blox NEO-6M (10Hz NMEA)</span>
+            </div>
+            <div class="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
+              <span class="text-slate-400">Cellular Modem:</span>
+              <span class="text-white font-bold">SIM7600E-H (4G LTE Cat-4)</span>
+            </div>
+            <div class="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
+              <span class="text-slate-400">Offline Flash:</span>
+              <span class="text-white font-bold">32GB MicroSD (FAT32 SPI)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offline Buffering Waterfall Simulator -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="font-display font-bold text-white text-base">Offline Local Storage & Cloud Sync Pipeline</h3>
+                <p class="text-xs text-slate-400 font-mono">Zero packet loss during highway cellular dead-zones (Slide 2 & 3)</p>
+              </div>
+              <button id="toggleNetworkBtn" onclick="toggleNetworkConnection()" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition flex items-center gap-2 bg-obsidian-850 hover:bg-obsidian-800 text-cyber-neon border border-cyber-neon/40 shadow-sm">
+                <i class="fa-solid fa-tower-broadcast"></i> <span id="toggleNetworkLabel">Simulate Cellular Loss</span>
+              </button>
+            </div>
+
+            <!-- Pipeline Diagram -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 my-4 font-mono text-xs">
+              <div class="p-3.5 bg-obsidian-950 rounded-xl border border-white/5 text-center">
+                <span class="text-[10px] text-slate-500 block mb-1 uppercase">01. INGESTION</span>
+                <span class="text-white font-bold block">CAN + GPS + IMU</span>
+                <span class="text-[10px] text-slate-400 mt-1 block">100ms sample loop</span>
+              </div>
+
+              <div class="p-3.5 bg-obsidian-950 rounded-xl border border-white/5 text-center">
+                <span class="text-[10px] text-slate-500 block mb-1 uppercase">02. SYNC FILTER</span>
+                <span class="text-white font-bold block">FreeRTOS Task</span>
+                <span class="text-[10px] text-slate-400 mt-1 block">Timestamp alignment</span>
+              </div>
+
+              <div class="p-3.5 bg-obsidian-950 rounded-xl border border-white/5 text-center">
+                <span class="text-[10px] text-slate-500 block mb-1 uppercase">03. QUEUING</span>
+                <span id="stepSdIndicator" class="text-cyber-neon font-bold block">MicroSD Storage</span>
+                <span class="text-[10px] text-slate-400 mt-1 block">FIFO circular file</span>
+              </div>
+
+              <div class="p-3.5 bg-obsidian-950 rounded-xl border border-white/5 text-center">
+                <span class="text-[10px] text-slate-500 block mb-1 uppercase">04. UPLINK</span>
+                <span id="stepCloudIndicator" class="text-cyber-neon font-bold block">MQTT Broker</span>
+                <span class="text-[10px] text-slate-400 mt-1 block">Bulk sync on connect</span>
+              </div>
+            </div>
+
+            <!-- Queue Depth Indicator -->
+            <div class="p-3.5 rounded-xl bg-obsidian-950 border border-white/10 flex items-center justify-between text-xs font-mono">
+              <span class="text-slate-400">Offline Backlog Depth:</span>
+              <span id="queueDepthLabel" class="text-cyber-neon font-bold">0 Batches (0.0 KB queued)</span>
+            </div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between text-xs font-mono text-slate-400 pt-3 border-t border-white/10">
+            <span>SD Card Wear-Leveling: <span class="text-cyber-neon font-bold">99.8% Healthy</span></span>
+            <span>Task Loop Latency: <span class="text-white font-bold">14 ms</span></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ESP32 Diagnostic Serial Monitor -->
+      <div class="glass-panel rounded-2xl p-5 font-mono text-xs">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-terminal text-cyber-neon"></i>
+            ESP32 UART Diagnostic Console
+          </span>
+          <button onclick="clearSerialLog()" class="text-slate-400 hover:text-white text-[11px] underline">Clear</button>
+        </div>
+        <div id="serialConsole" class="h-44 bg-obsidian-950 p-3 rounded-xl border border-white/5 overflow-y-auto space-y-1 text-slate-400 text-[11px] leading-relaxed">
+          <div><span class="text-cyber-neon">[BOOT]</span> ESP32-WROOM-32 initialized. Flash: 4MB QSPI. Clock: 240MHz.</div>
+          <div><span class="text-cyber-neon">[CAN]</span> MCP2515 initialized at 500kbps. Mode: Listen-Only (TX severed).</div>
+          <div><span class="text-cyber-neon">[GPS]</span> NEO-6M fixed 3D coordinates. Quality: 1. Sats: 9. HDOP: 0.88.</div>
+          <div><span class="text-cyber-neon">[IMU]</span> MPU-6050 calibrated. Sample rate: 50Hz. Offset calibrated.</div>
+          <div><span class="text-cyber-teal">[MQTT]</span> Socket connected to tcp://fleet.apolyx.internal:1883. QoS: 1.</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: PREDICTIVE DIAGNOSTICS & ADVISORY   -->
+    <!-- ========================================== -->
+    <section id="tab-advisory" class="tab-content hidden space-y-4">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        <!-- Controls & Technical Inquiries -->
+        <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center space-x-2.5">
+              <div class="w-9 h-9 rounded-xl bg-obsidian-950 border border-cyber-neon/40 text-cyber-neon flex items-center justify-center font-bold text-base">
+                <i class="fa-solid fa-brain"></i>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-white text-base">Predictive Diagnostic Core</h3>
+                <p class="text-[11px] text-slate-400 font-mono">Automotive Telematics Evaluator</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+              Synthesizes real-time OBD-II PIDs, active DTCs, fuel anomalies, and IMU events into clear, explainable mechanic repair checklists.
+            </p>
+
+            <!-- Standard Engineering Presets -->
+            <div class="mt-4 space-y-2 font-mono text-xs">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Standard Engineering Audits:</span>
+              
+              <button onclick="applyDiagnosticPreset('audit')" class="w-full text-left p-3 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/5 text-slate-300 transition flex items-center justify-between">
+                <span><i class="fa-solid fa-clipboard-check text-cyber-neon mr-2"></i> Comprehensive Fleet Inspection</span>
+                <i class="fa-solid fa-chevron-right text-slate-600 text-[10px]"></i>
+              </button>
+
+              <button onclick="applyDiagnosticPreset('dtc')" class="w-full text-left p-3 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/5 text-slate-300 transition flex items-center justify-between">
+                <span><i class="fa-solid fa-wrench text-cyber-amber mr-2"></i> P0171 Lean Fuel Trim Troubleshooting</span>
+                <i class="fa-solid fa-chevron-right text-slate-600 text-[10px]"></i>
+              </button>
+
+              <button onclick="applyDiagnosticPreset('e20')" class="w-full text-left p-3 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 border border-white/5 text-slate-300 transition flex items-center justify-between">
+                <span><i class="fa-solid fa-flask text-cyber-teal mr-2"></i> E20 Stoichiometric Fuel Analysis</span>
+                <i class="fa-solid fa-chevron-right text-slate-600 text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Prompt Form -->
+          <div class="space-y-2 pt-2 border-t border-white/10 font-mono">
+            <textarea id="advisoryQuery" rows="3" class="w-full bg-obsidian-950 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:border-cyber-neon focus:outline-none" placeholder="Inquire about powertrain wear, fuel siphon patterns, or sensor anomalies..."></textarea>
+            <button id="runAdvisoryBtn" onclick="runDiagnosticEngineAnalysis()" class="w-full py-2.5 bg-cyber-neon text-black font-bold text-xs rounded-xl transition shadow-lg shadow-cyber-neon/20 hover:brightness-110 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-play text-xs"></i> Compile Telematics Evaluation
+            </button>
+          </div>
+        </div>
+
+        <!-- Diagnostic Report Output -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-5 flex flex-col">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3 font-mono">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyber-neon animate-pulse"></span>
+              <h4 class="font-bold text-white text-xs uppercase tracking-wider">Automotive Diagnostic Report</h4>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-obsidian-950 text-slate-400 border border-white/10">gemini-3-flash-preview</span>
+          </div>
+
+          <div id="advisoryOutput" class="flex-1 bg-obsidian-950 rounded-xl p-5 border border-white/5 overflow-y-auto text-xs leading-relaxed text-slate-300 min-h-[340px]">
+            <div class="h-full flex flex-col items-center justify-center text-center text-slate-500 py-12">
+              <i class="fa-solid fa-microchip-ai text-4xl mb-3 text-slate-700"></i>
+              <p class="font-bold text-slate-400 text-sm font-display">Diagnostic Engine Standby</p>
+              <p class="text-[11px] text-slate-500 max-w-sm mt-1 font-mono">Select a preset audit or trigger an evaluation to synthesize live CAN frames and trouble codes.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- TELEMETRY SIMULATION MODAL -->
+  <div id="simModal" class="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-panel bg-obsidian-900 border border-white/15 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="font-display font-bold text-white text-base flex items-center gap-2">
+          <i class="fa-solid fa-gamepad text-cyber-neon"></i>
+          CAN & OBD-II Bus Simulator
+        </h3>
+        <button onclick="closeSimModal()" class="text-slate-400 hover:text-white text-xs p-1">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs font-mono">
+        <div>
+          <div class="flex justify-between text-slate-300 mb-1">
+            <span>Vehicle Speed (km/h):</span>
+            <span id="simSpeedVal" class="text-cyber-neon font-bold">58</span>
+          </div>
+          <input id="simSpeedSlider" type="range" min="0" max="130" value="58" class="w-full accent-cyber-neon bg-obsidian-950 rounded-lg cursor-pointer">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-slate-300 mb-1">
+            <span>Engine RPM (0x0C):</span>
+            <span id="simRpmVal" class="text-cyber-teal font-bold">1820</span>
+          </div>
+          <input id="simRpmSlider" type="range" min="600" max="4500" step="50" value="1820" class="w-full accent-cyber-teal bg-obsidian-950 rounded-lg cursor-pointer">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-slate-300 mb-1">
+            <span>Fuel Tank (0x2F %):</span>
+            <span id="simFuelVal" class="text-cyber-amber font-bold">68</span>
+          </div>
+          <input id="simFuelSlider" type="range" min="5" max="100" value="68" class="w-full accent-cyber-amber bg-obsidian-950 rounded-lg cursor-pointer">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-slate-300 mb-1">
+            <span>Coolant Temp (0x05 °C):</span>
+            <span id="simCoolantVal" class="text-white font-bold">89</span>
+          </div>
+          <input id="simCoolantSlider" type="range" min="40" max="125" value="89" class="w-full accent-slate-300 bg-obsidian-950 rounded-lg cursor-pointer">
+        </div>
+
+        <div class="pt-3 border-t border-white/10 flex justify-end">
+          <button onclick="closeSimModal()" class="px-5 py-2 bg-cyber-neon text-black font-bold rounded-xl text-xs transition">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODERN COCKPIT FOOTER -->
+  <footer class="bg-obsidian-950 border-t border-white/5 py-3 text-xs text-slate-500 font-mono">
+    <div class="max-w-[1500px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <span class="text-slate-300 font-semibold">APOLYX Telematics OS</span>
+        <span>//</span>
+        <span class="text-cyber-neon">SIH 2026 Hardware Category</span>
+        <span>//</span>
+        <span>PS 26220</span>
+      </div>
+      <div class="text-[11px] text-slate-500">
+        Non-Intrusive MCP2515 CAN Sniffer • SPI SD Buffering • E20 Fuel-Type-Aware
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* =========================================================================
+     * APOLYX TELEMETRY CORE STATE
+     * ========================================================================= */
+    const state = {
+      isOnline: true,
+      sdBufferCount: 0,
+      activeVehicle: 'AP-TRUCK-101',
+      speed: 58,
+      rpm: 1820,
+      fuel: 68.4,
+      coolant: 89,
+      throttle: 18,
+      load: 34,
+      maf: 22.4,
+      voltage: 14.1,
+      driverScore: 91,
+      harshBrakes: 1,
+      harshAccels: 0,
+      idleMinutes: 42,
+      fuelWasted: 1.82,
+      dtcs: [
+        {
+          code: 'P0171',
+          name: 'System Too Lean (Bank 1)',
+          severity: 'Warning',
+          desc: 'Air-to-fuel ratio exceeds threshold. Probable vacuum leak or dirty MAF sensor.',
+          impact: '+8% Fuel Inefficiency'
+        }
+      ],
+      imu: { x: 0.04, y: -0.08, z: 0.98 },
+      imuTrail: [],
+      history: {
+        timestamps: [],
+        speed: [],
+        rpm: [],
+        throttle: []
+      }
+    };
+
+    // Prepopulate rolling telemetry window
+    const startTime = new Date();
+    for (let i = 14; i >= 0; i--) {
+      const timeStr = new Date(startTime.getTime() - i * 2000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      state.history.timestamps.push(timeStr);
+      state.history.speed.push(Math.round(50 + Math.sin(i) * 8));
+      state.history.rpm.push(Math.round((1700 + Math.cos(i) * 150) / 50));
+      state.history.throttle.push(Math.round(15 + Math.sin(i * 0.5) * 5));
+    }
+
+    let telemetryChartInstance = null;
+    let fuelChartInstance = null;
+
+    function initCharts() {
+      // High-Frequency CAN Waveform Chart
+      const ctxTel = document.getElementById('telemetryChart').getContext('2d');
+      telemetryChartInstance = new Chart(ctxTel, {
+        type: 'line',
+        data: {
+          labels: state.history.timestamps,
+          datasets: [
+            {
+              label: 'Speed (km/h)',
+              data: state.history.speed,
+              borderColor: '#00f090',
+              backgroundColor: 'rgba(0, 240, 144, 0.08)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              pointRadius: 2,
+              pointHoverRadius: 5
+            },
+            {
+              label: 'RPM / 50',
+              data: state.history.rpm,
+              borderColor: '#00d2ff',
+              borderWidth: 2,
+              tension: 0.35,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: 'Throttle %',
+              data: state.history.throttle,
+              borderColor: '#ffb300',
+              borderWidth: 1.5,
+              tension: 0.35,
+              borderDash: [4, 4],
+              fill: false,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      // Modernized Fuel Trajectory Chart
+      const ctxFuel = document.getElementById('fuelTrajectoryChart').getContext('2d');
+      const fuelTimes = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00'];
+      const expectedBaseline = [82, 79.5, 77, 74.8, 72.2, 70, 68.2, 66, 64];
+      const actualObserved = [82, 79.2, 77.1, 74.5, 72.0, 68.4, 68.4, 68.4, 68.4];
+
+      fuelChartInstance = new Chart(ctxFuel, {
+        type: 'line',
+        data: {
+          labels: fuelTimes,
+          datasets: [
+            {
+              label: 'Theoretical Burn Model (E20 Trim-Compensated)',
+              data: expectedBaseline,
+              borderColor: '#64748b',
+              borderDash: [5, 5],
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: 'Observed Sensor Float Level (PID 0x2F)',
+              data: actualObserved,
+              borderColor: '#ffb300',
+              backgroundColor: 'rgba(255, 179, 0, 0.08)',
+              borderWidth: 2.5,
+              fill: true,
+              pointRadius: 4,
+              pointBackgroundColor: '#ffb300'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y: {
+              min: 50,
+              max: 90,
+              grid: { color: 'rgba(255, 255, 255, 0.04)' },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'JetBrains Mono', size: 10 },
+                callback: function(v) { return v + '%'; }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    function drawImuVisualizer() {
+      const canvas = document.getElementById('imuCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Radar Concentric Circles (0.25G, 0.5G, 1.0G Threshold)
+      const radii = [35, 75, 115];
+      radii.forEach((r, idx) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = idx === 2 ? 'rgba(255, 51, 102, 0.4)' : 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash(idx === 2 ? [4, 4] : []);
+        ctx.stroke();
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '8px "JetBrains Mono"';
+        ctx.fillText(`${(r / 115).toFixed(1)}G`, cx + r - 16, cy - 4);
+      });
+      ctx.setLineDash([]);
+
+      // Crosshairs
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.beginPath();
+      ctx.moveTo(cx, 15);
+      ctx.lineTo(cx, h - 15);
+      ctx.moveTo(15, cy);
+      ctx.lineTo(w - 15, cy);
+      ctx.stroke();
+
+      // Axis labels
+      ctx.fillStyle = '#64748b';
+      ctx.font = '9px "JetBrains Mono"';
+      ctx.fillText('+Y (Acceleration)', cx + 4, 25);
+      ctx.fillText('-Y (Braking)', cx + 4, h - 20);
+      ctx.fillText('-X (Left Turn)', 20, cy - 6);
+      ctx.fillText('+X (Right Turn)', w - 85, cy - 6);
+
+      // Current G vector with historical tail
+      const scale = 115; // 1.0G = 115px
+      const px = cx + (state.imu.x * scale);
+      const py = cy - (state.imu.y * scale);
+
+      // Store trail points
+      state.imuTrail.push({ x: px, y: py });
+      if (state.imuTrail.length > 12) state.imuTrail.shift();
+
+      // Draw faint trail
+      ctx.strokeStyle = 'rgba(0, 240, 144, 0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      state.imuTrail.forEach((pt, idx) => {
+        if (idx === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.stroke();
+
+      // Glowing center vector
+      const grad = ctx.createRadialGradient(px, py, 2, px, py, 16);
+      grad.addColorStop(0, '#00f090');
+      grad.addColorStop(1, 'rgba(0, 240, 144, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#00f090';
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    let routeAnimStep = 0;
+    function drawRouteMap() {
+      const canvas = document.getElementById('routeCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.parentElement.clientWidth;
+      const h = canvas.height = canvas.parentElement.clientHeight;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Cyber Grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.lineWidth = 1;
+      const step = 28;
+      for (let x = 0; x < w; x += step) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += step) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      // Bezier Route
+      ctx.beginPath();
+      ctx.moveTo(25, h * 0.82);
+      ctx.bezierCurveTo(w * 0.35, h * 0.92, w * 0.45, h * 0.18, w * 0.88, h * 0.32);
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+
+      // Glowing route overlay
+      ctx.strokeStyle = 'rgba(0, 210, 255, 0.3)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      // Animate truck marker
+      routeAnimStep = (routeAnimStep + 0.003) % 1;
+      const t = routeAnimStep;
+      const p0 = { x: 25, y: h * 0.82 };
+      const p1 = { x: w * 0.35, y: h * 0.92 };
+      const p2 = { x: w * 0.45, y: h * 0.18 };
+      const p3 = { x: w * 0.88, y: h * 0.32 };
+
+      const curX = Math.pow(1 - t, 3) * p0.x + 3 * Math.pow(1 - t, 2) * t * p1.x + 3 * (1 - t) * Math.pow(t, 2) * p2.x + Math.pow(t, 3) * p3.x;
+      const curY = Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y;
+
+      ctx.beginPath();
+      ctx.arc(curX, curY, 8 + Math.sin(Date.now() / 250) * 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#00f090';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#00f090';
+      ctx.beginPath();
+      ctx.arc(curX, curY, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      requestAnimationFrame(drawRouteMap);
+    }
+
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => {
+          t.classList.remove('active-tab', 'text-black', 'bg-cyber-neon', 'font-bold');
+          t.classList.add('text-slate-400');
+        });
+        tab.classList.add('active-tab', 'text-black', 'bg-cyber-neon', 'font-bold');
+        tab.classList.remove('text-slate-400');
+
+        const target = tab.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(target).classList.remove('hidden');
+
+        if (target === 'tab-cockpit' && telemetryChartInstance) telemetryChartInstance.resize();
+        if (target === 'tab-fuel' && fuelChartInstance) fuelChartInstance.resize();
+        if (target === 'tab-dynamics') drawImuVisualizer();
+      });
+    });
+
+    // Real-Time 1.5s High Frequency Loop
+    setInterval(() => {
+      if (state.speed > 0) {
+        const delta = (Math.random() - 0.5) * 3;
+        state.speed = Math.max(10, Math.min(110, Math.round(state.speed + delta)));
+        state.rpm = Math.round(state.speed * 31 + (Math.random() - 0.5) * 40);
+        state.throttle = Math.round(15 + (state.speed / 120) * 25);
+        state.maf = +(15 + (state.rpm / 4000) * 35).toFixed(1);
+      }
+
+      state.imu.x = +((Math.random() - 0.5) * 0.08).toFixed(2);
+      state.imu.y = +(-0.06 + (Math.random() - 0.5) * 0.06).toFixed(2);
+
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      state.history.timestamps.shift();
+      state.history.timestamps.push(timeStr);
+
+      state.history.speed.shift();
+      state.history.speed.push(state.speed);
+
+      state.history.rpm.shift();
+      state.history.rpm.push(Math.round(state.rpm / 50));
+
+      state.history.throttle.shift();
+      state.history.throttle.push(state.throttle);
+
+      if (!state.isOnline) {
+        state.sdBufferCount += 1;
+        document.getElementById('sdBufferCount').textContent = `${state.sdBufferCount} pkts`;
+        document.getElementById('queueDepthLabel').textContent = `${state.sdBufferCount} Batches (~${(state.sdBufferCount * 0.24).toFixed(1)} KB queued)`;
+        logSerial(`[SD_QUEUE] 4G link inactive. Stored packet #${state.sdBufferCount} to /SPI_LOG/08092026.DAT`);
+      }
+
+      // Add CAN Hex Stream Simulation Line
+      injectCanHexLine();
+      updateUI();
+    }, 1500);
+
+    function updateUI() {
+      // Speed Gauge & Arc
+      document.getElementById('kpiSpeed').textContent = state.speed;
+      const speedPct = Math.min(100, (state.speed / 120) * 100);
+      const speedOffset = 314.15 - (speedPct / 100) * 240;
+      document.getElementById('speedArc').style.strokeDashoffset = speedOffset;
+
+      const tag = document.getElementById('speedIndicatorTag');
+      if (state.speed > 80) {
+        tag.textContent = 'OVER SPEED';
+        tag.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-crimson/20 text-cyber-crimson border border-cyber-crimson/40 font-bold';
+      } else {
+        tag.textContent = 'NOMINAL';
+        tag.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-neon/15 text-cyber-neon border border-cyber-neon/30 font-semibold';
+      }
+
+      // RPM Gauge & Arc
+      document.getElementById('kpiRpm').textContent = state.rpm.toLocaleString();
+      const rpmPct = Math.min(100, (state.rpm / 4000) * 100);
+      const rpmOffset = 314.15 - (rpmPct / 100) * 240;
+      document.getElementById('rpmArc').style.strokeDashoffset = rpmOffset;
+
+      // Fuel
+      document.getElementById('kpiFuel').textContent = state.fuel.toFixed(1);
+      document.getElementById('fuelBarSegment').style.width = `${state.fuel}%`;
+      document.getElementById('kpiRange').textContent = `${Math.round(state.fuel * 5)} km`;
+
+      // Micro Cards
+      document.getElementById('microCoolant').textContent = `${state.coolant} °C`;
+      document.getElementById('pidCoolant').textContent = `${state.coolant} °C`;
+      document.getElementById('pidThrottle').textContent = `${state.throttle} %`;
+      document.getElementById('hudThrottle').textContent = `${state.throttle} %`;
+      document.getElementById('pidMaf').textContent = `${state.maf} g/s`;
+      document.getElementById('hudMaf').textContent = `${state.maf} g/s`;
+      document.getElementById('hudLoad').textContent = `${state.load}%`;
+
+      // IMU
+      document.getElementById('imuX').textContent = (state.imu.x >= 0 ? '+' : '') + state.imu.x + ' G';
+      document.getElementById('imuY').textContent = (state.imu.y >= 0 ? '+' : '') + state.imu.y + ' G';
+
+      if (telemetryChartInstance) telemetryChartInstance.update('none');
+      drawImuVisualizer();
+    }
+
+    function injectCanHexLine() {
+      const hexStream = document.getElementById('canHexStream');
+      if (!hexStream) return;
+      const pids = [
+        { pid: '0D', name: 'Speed', hex: state.speed.toString(16).padStart(2, '0').toUpperCase(), val: `${state.speed} km/h` },
+        { pid: '0C', name: 'RPM', hex: (state.rpm * 4).toString(16).padStart(4, '0').toUpperCase(), val: `${state.rpm} RPM` },
+        { pid: '11', name: 'Throttle', hex: Math.round(state.throttle * 2.55).toString(16).padStart(2, '0').toUpperCase(), val: `${state.throttle}%` }
+      ];
+      const p = pids[Math.floor(Math.random() * pids.length)];
+      const line = document.createElement('div');
+      const timeStr = new Date().toLocaleTimeString() + '.' + Math.floor(Math.random() * 900 + 100);
+      line.innerHTML = `<span class="text-slate-600">[${timeStr}]</span> <span class="text-cyber-neon">RX 0x7E8</span> 03 41 ${p.pid} ${p.hex} 00 00 00 00 <span class="text-slate-500">| PID 0x${p.pid} ${p.name} = ${p.val}</span>`;
+      hexStream.appendChild(line);
+      hexStream.scrollTop = hexStream.scrollHeight;
+      if (hexStream.children.length > 25) hexStream.removeChild(hexStream.firstChild);
+    }
+
+    function toggleNetworkConnection() {
+      state.isOnline = !state.isOnline;
+      const connPulse = document.getElementById('connPulse');
+      const connDot = document.getElementById('connDot');
+      const connText = document.getElementById('connText');
+      const pingRate = document.getElementById('pingRate');
+      const btnLabel = document.getElementById('toggleNetworkLabel');
+      const stepSd = document.getElementById('stepSdIndicator');
+      const stepCloud = document.getElementById('stepCloudIndicator');
+
+      if (!state.isOnline) {
+        connPulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-crimson opacity-75";
+        connDot.className = "relative inline-flex rounded-full h-2 w-2 bg-cyber-crimson";
+        connText.textContent = "OFFLINE BUFFER";
+        pingRate.textContent = "DISCONNECTED";
+        pingRate.className = "text-cyber-crimson text-[11px] font-semibold";
+        btnLabel.textContent = "Restore 4G Cellular Link";
+        stepSd.className = "text-cyber-amber font-bold block animate-pulse";
+        stepCloud.className = "text-slate-600 font-semibold block";
+        showAlertBanner("CELLULAR LINK OFFLINE", "4G LTE bearer lost. MicroSD FAT32 local buffering engaged. Zero telemetry frame loss.", "OFFLINE");
+        logSerial(`[NET] Carrier bearer dropped. Switched to SD SPI buffer task.`);
+      } else {
+        connPulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-neon opacity-75";
+        connDot.className = "relative inline-flex rounded-full h-2 w-2 bg-cyber-neon";
+        connText.textContent = "4G MQTT LINK";
+        pingRate.textContent = "12ms";
+        pingRate.className = "text-cyber-neon text-[11px] font-semibold";
+        btnLabel.textContent = "Simulate Cellular Loss";
+        stepSd.className = "text-cyber-neon font-bold block";
+        stepCloud.className = "text-cyber-neon font-bold block";
+        
+        const count = state.sdBufferCount;
+        state.sdBufferCount = 0;
+        document.getElementById('sdBufferCount').textContent = "0 pkts";
+        document.getElementById('queueDepthLabel').textContent = "0 Batches (Bulk Synced via MQTT)";
+        showAlertBanner("CELLULAR LINK RESTORED", `Cloud broker handshake verified. Bulk-flushed ${count} buffered telemetry frames.`, "SYNC OK");
+        logSerial(`[MQTT] Re-established TLS 1.3 socket. Flushed ${count} frames from SPI SD card.`);
+      }
+    }
+
+    function injectFuelLossAnomaly() {
+      state.fuel = Math.max(10, state.fuel - 14.5);
+      state.idleMinutes += 15;
+      state.fuelWasted += 1.4;
+      document.getElementById('idleTime').textContent = `${state.idleMinutes} mins`;
+      document.getElementById('idleFuelWasted').textContent = `${state.fuelWasted.toFixed(2)} Litres`;
+
+      const tbody = document.getElementById('fuelAnomalyTbody');
+      const tr = document.createElement('tr');
+      tr.className = "bg-cyber-crimson/15 text-cyber-crimson font-mono font-medium";
+      tr.innerHTML = `
+        <td class="py-2.5 px-3">Just now</td>
+        <td class="py-2.5 px-3 text-cyber-crimson font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Rapid Drop (Unexplained)</td>
+        <td class="py-2.5 px-3 font-bold text-cyber-crimson">-14.5 L in 180s</td>
+        <td class="py-2.5 px-3">0 km/h (Stationary)</td>
+        <td class="py-2.5 px-3 text-slate-400">Wada Logistics Park</td>
+        <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-cyber-crimson/20 text-cyber-crimson uppercase text-[10px] font-bold border border-cyber-crimson/40">Flagged</span></td>
+      `;
+      tbody.prepend(tr);
+
+      showAlertBanner("FUEL LEVEL DEVIATION", "Negative slope mismatch detected between float level and engine load. Possible fuel siphon event.", "CRITICAL");
+      logSerial(`[ANOMALY] Float level threshold exceeded (Δ = -14.5L, RPM = 0). Code: FUEL_SIPHON_SUSPECT.`);
+      updateUI();
+    }
+
+    function triggerHarshBrakeSim() {
+      state.imu.y = -0.68;
+      state.harshBrakes += 1;
+      state.driverScore = Math.max(65, state.driverScore - 4);
+      document.getElementById('driverBrakes').textContent = state.harshBrakes;
+      document.getElementById('kpiDriverScore').textContent = state.driverScore;
+      document.getElementById('kpiHarshCount').textContent = state.harshBrakes;
+
+      showAlertBanner("HARSH DECELERATION EVENT", "IMU registered -0.68 G longitudinal deceleration at 55 km/h.", "WARNING");
+      logSerial(`[IMU] Threshold interrupt: Y-Axis = -0.68G. Event: HARSH_BRAKE.`);
+      drawImuVisualizer();
+    }
+
+    function simulateAddDtc() {
+      const code = 'P0300';
+      const item = {
+        code: 'P0300',
+        name: 'Random / Multiple Cylinder Misfire Detected',
+        severity: 'Critical',
+        desc: 'ECU detected multiple cylinder ignition misfires. Potential ignition coil breakdown, clogged injector, or fuel rail pressure drop.',
+        impact: '+18% Fuel Penalty'
+      };
+      state.dtcs.push(item);
+      document.getElementById('dtcCount').textContent = `${state.dtcs.length} Codes`;
+      document.getElementById('kpiDtcBadge').textContent = `${state.dtcs.length} Active`;
+
+      const list = document.getElementById('dtcList');
+      const div = document.createElement('div');
+      div.id = `dtc-${code}`;
+      div.className = "p-4 rounded-xl bg-obsidian-950 border border-cyber-crimson/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4";
+      div.innerHTML = `
+        <div class="flex items-start space-x-3.5">
+          <span class="px-2.5 py-1 rounded-md bg-cyber-crimson/20 text-cyber-crimson font-mono font-bold text-xs border border-cyber-crimson/40">${code}</span>
+          <div>
+            <h4 class="font-semibold text-white text-sm">${item.name}</h4>
+            <p class="text-xs text-slate-400 mt-0.5">${item.desc}</p>
+            <div class="flex items-center space-x-4 mt-2 text-[11px] font-mono text-slate-400">
+              <span>Freeze frame: <strong class="text-white">RPM: 2100 | Speed: 48 km/h</strong></span>
+              <span>Estimated penalty: <strong class="text-cyber-crimson font-bold">${item.impact}</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="shrink-0">
+          <button onclick="consultDiagnosticsForDtc('${code}')" class="px-3 py-1.5 bg-obsidian-850 hover:bg-obsidian-800 text-white border border-white/10 rounded-lg text-xs font-mono font-semibold transition">
+            Diagnostic Analysis &rarr;
+          </button>
+        </div>
+      `;
+      list.prepend(div);
+      showAlertBanner("NEW DTC REGISTERED (P0300)", "ECU Mode 03 response confirmed Multiple Cylinder Misfire.", "CRITICAL");
+      logSerial(`[OBD] Mode 03 query response: DTC P0300 confirmed by ECU.`);
+    }
+
+    function clearDtcs() {
+      state.dtcs = [];
+      document.getElementById('dtcCount').textContent = '0 Codes';
+      document.getElementById('kpiDtcBadge').textContent = '0 Nominal';
+      document.getElementById('dtcList').innerHTML = `
+        <div class="p-8 text-center text-slate-500 bg-obsidian-950 rounded-xl border border-white/5">
+          <i class="fa-solid fa-circle-check text-cyber-neon text-2xl mb-2"></i>
+          <p class="text-xs text-white font-bold font-mono">No Active Diagnostic Trouble Codes</p>
+          <p class="text-[11px] text-slate-500 font-mono mt-0.5">All OBD-II readiness monitors confirmed nominal.</p>
+        </div>
+      `;
+      showAlertBanner("DTC MEMORY CLEARED", "Mode 04 reset frame transmitted to ECU. Diagnostic faults cleared.", "INFO");
+      logSerial(`[OBD] Sent Mode 04 clear frame to CAN ID 0x7DF. Clear acknowledged.`);
+    }
+
+    function showAlertBanner(title, msg, badge) {
+      const banner = document.getElementById('activeAlertBanner');
+      document.getElementById('alertBannerTitle').textContent = title;
+      document.getElementById('alertBannerMsg').textContent = msg;
+      document.getElementById('alertBannerBadge').textContent = badge;
+      banner.classList.remove('hidden');
+    }
+
+    function dismissBanner() {
+      document.getElementById('activeAlertBanner').classList.add('hidden');
+    }
+
+    function logSerial(msg) {
+      const consoleEl = document.getElementById('serialConsole');
+      if (!consoleEl) return;
+      const row = document.createElement('div');
+      row.innerHTML = `<span class="text-slate-600">${new Date().toLocaleTimeString()}</span> ${msg}`;
+      consoleEl.appendChild(row);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function clearSerialLog() {
+      document.getElementById('serialConsole').innerHTML = '';
+    }
+
+    function applyDiagnosticPreset(type) {
+      const queryInput = document.getElementById('advisoryQuery');
+      if (type === 'audit') {
+        queryInput.value = `Perform a comprehensive fleet health and telemetry assessment for vehicle ${state.activeVehicle} with speed ${state.speed} km/h, RPM ${state.rpm}, fuel ${state.fuel}%, and active DTCs. Include fuel efficiency recommendations.`;
+      } else if (type === 'dtc') {
+        queryInput.value = `Provide a step-by-step diagnostic and root-cause repair checklist for fault code P0171 (System Too Lean) on a commercial truck with E20 fuel awareness.`;
+      } else if (type === 'e20') {
+        queryInput.value = `Explain how E20 ethanol blend impacts fuel economy on older diesel and petrol fleet engines, and how the Apolyx retrofit rule engine distinguishes fuel theft from normal idling.`;
+      }
+      runDiagnosticEngineAnalysis();
+    }
+
+    function consultDiagnosticsForDtc(code) {
+      document.querySelector('[data-tab="tab-advisory"]').click();
+      const queryInput = document.getElementById('advisoryQuery');
+      queryInput.value = `Provide detailed mechanic troubleshooting guidance and component replacement advice for trouble code ${code} detected on ${state.activeVehicle}.`;
+      runDiagnosticEngineAnalysis();
+    }
+
+    async function runDiagnosticEngineAnalysis() {
+      const userPrompt = document.getElementById('advisoryQuery').value.trim() || 
+        `Provide an intelligent vehicle health report for ${state.activeVehicle}.`;
+      const outputContainer = document.getElementById('advisoryOutput');
+      const btn = document.getElementById('runAdvisoryBtn');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> Compiling Diagnostics...`;
+      outputContainer.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-48 space-y-3 font-mono">
+          <div class="w-7 h-7 border-2 border-cyber-neon border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs text-slate-400">Processing live telemetry stream via Automotive Diagnostic Model...</p>
+        </div>
+      `;
+
+      const systemPrompt = `You are the lead automotive systems engineer for APOLYX, an intelligent retrofit vehicle device project for Smart India Hackathon 2026 (Problem Statement 26220).
+Apolyx equips existing commercial vehicles with ESP32-based read-only OBD-II/CAN listeners, IMU motion sensing, GPS, microSD offline buffering, and E20-fuel-aware intelligence.
+
+Current Vehicle Telemetry State:
+- Asset ID: ${state.activeVehicle}
+- Speed: ${state.speed} km/h
+- Engine RPM: ${state.rpm} RPM
+- Fuel Float: ${state.fuel.toFixed(1)}%
+- Coolant Temp: ${state.coolant} °C
+- Active Trouble Codes: ${state.dtcs.map(d => d.code + ' (' + d.name + ')').join(', ') || 'None'}
+- Idle Duration: ${state.idleMinutes} mins
+- Driver Score: ${state.driverScore} / 100
+- Hardware: Read-Only CAN Sniffer with Offline SD Buffering
+
+Provide a structured, professional, engineering-grade diagnosis formatted with clean HTML tags (<h4>, <p>, <ul>, <li>, <strong>). Keep the tone technical, objective, and operational. Include:
+1. Executive Telematics Summary
+2. Powertrain & DTC Root-Cause Analysis
+3. E20 Stoichiometric Trim & Consumption Assessment
+4. Scheduled Maintenance & Immediate Action Items`;
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+        const payload = {
+          contents: [{ parts: [{ text: userPrompt }] }],
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error(`Status ${response.status}`);
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (text) {
+          let cleanHtml = text
+            .replace(/```html/g, '')
+            .replace(/```/g, '')
+            .replace(/### (.*?)\n/g, '<h4 class="text-xs font-mono font-bold text-cyber-neon mt-3 mb-1 uppercase tracking-wide">$1</h4>')
+            .replace(/## (.*?)\n/g, '<h3 class="text-sm font-display font-bold text-white mt-3 mb-1.5">$1</h3>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-100 font-semibold">$1</strong>')
+            .replace(/\* (.*?)\n/g, '<li class="ml-4 list-disc text-slate-300 py-0.5 text-xs">$1</li>');
+
+          outputContainer.innerHTML = `
+            <div class="space-y-3 font-sans">
+              <div class="p-3 bg-obsidian-900 border border-white/10 rounded-xl flex items-center justify-between font-mono text-[11px]">
+                <span class="text-slate-300">Diagnosis compiled for <strong class="text-cyber-neon">${state.activeVehicle}</strong></span>
+                <span class="text-slate-500">${new Date().toLocaleTimeString()}</span>
+              </div>
+              <div class="text-slate-300 leading-relaxed">${cleanHtml}</div>
+            </div>
+          `;
+        } else {
+          throw new Error('Empty payload');
+        }
+      } catch (err) {
+        outputContainer.innerHTML = generateLocalFallbackReport();
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-play text-xs"></i> Compile Telematics Evaluation`;
+      }
+    }
+
+    function generateLocalFallbackReport() {
+      return `
+        <div class="space-y-3 text-xs font-sans">
+          <div class="p-3 bg-obsidian-900 border border-white/10 rounded-xl flex items-center justify-between font-mono text-[11px]">
+            <span class="text-cyber-neon font-bold">APOLYX Embedded Rule Engine Report (Local Fallback)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-obsidian-950 text-slate-400 border border-white/10">Local Mode</span>
+          </div>
+
+          <div>
+            <h4 class="font-mono font-bold text-white text-xs uppercase mb-1">1. Powertrain Summary</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Asset <strong>${state.activeVehicle}</strong> health score is at <strong>88/100</strong>. Fuel capacity is <strong>${state.fuel.toFixed(1)}%</strong> with an operational range estimate of <strong>${Math.round(state.fuel * 5)} km</strong>.
+            </p>
+          </div>
+
+          <div class="border-t border-white/10 pt-2">
+            <h4 class="font-mono font-bold text-cyber-amber text-xs uppercase mb-1">2. Fault Diagnostic (DTC)</h4>
+            <ul class="list-disc ml-4 space-y-1 text-slate-400">
+              <li><strong>P0171 (System Too Lean):</strong> Positive LTFT deviation exceeding 12%. Check intake manifold ducting for unmetered air and clean hot-wire MAF element.</li>
+              <li><strong>Excessive Idling:</strong> Cumulative idle has logged ${state.idleMinutes} minutes today, representing ~${state.fuelWasted.toFixed(2)} L of stationary fuel burn.</li>
+            </ul>
+          </div>
+
+          <div class="border-t border-white/10 pt-2">
+            <h4 class="font-mono font-bold text-cyber-teal text-xs uppercase mb-1">3. E20 Fuel Stoichiometry</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Calculated ethanol ratio matches current commercial E20 supply. Current volumetric consumption shift reflects nominal stoichiometric changes rather than injector mechanical degradation.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    const simModal = document.getElementById('simModal');
+    document.getElementById('simModalBtn').onclick = () => simModal.classList.remove('hidden');
+    function closeSimModal() { simModal.classList.add('hidden'); }
+
+    document.getElementById('simSpeedSlider').oninput = (e) => {
+      state.speed = parseInt(e.target.value);
+      document.getElementById('simSpeedVal').textContent = state.speed;
+      updateUI();
+    };
+
+    document.getElementById('simRpmSlider').oninput = (e) => {
+      state.rpm = parseInt(e.target.value);
+      document.getElementById('simRpmVal').textContent = state.rpm;
+      updateUI();
+    };
+
+    document.getElementById('simFuelSlider').oninput = (e) => {
+      state.fuel = parseFloat(e.target.value);
+      document.getElementById('simFuelVal').textContent = state.fuel;
+      updateUI();
+    };
+
+    document.getElementById('simCoolantSlider').oninput = (e) => {
+      state.coolant = parseInt(e.target.value);
+      document.getElementById('simCoolantVal').textContent = state.coolant;
+      updateUI();
+    };
+
+    document.getElementById('vehicleSelector').onchange = (e) => {
+      state.activeVehicle = e.target.value;
+      showAlertBanner("ASSET SWITCHED", `Active telematics target set to: ${state.activeVehicle}`, "SWITCHED");
+      logSerial(`[VEHICLE] Target switched to ${state.activeVehicle}. Initialized PID calibration.`);
+    };
+
+    window.onload = function() {
+      initCharts();
+      drawImuVisualizer();
+      drawRouteMap();
+      updateUI();
+      logSerial(`[SYSTEM] APOLYX Modern OS Initialized. Bus listening active.`);
+    };
+  </script>
+</body>
+</html>
