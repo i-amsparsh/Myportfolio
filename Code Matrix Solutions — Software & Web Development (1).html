@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Code Matrix Solutions — Software & Web Development</title>
+<meta name="description" content="Code Matrix Solutions — modern software applications and high-performance web development, engineered end-to-end from first commit to launch.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#07080B;--panel:#0D0F14;--card:#12151E;--cardh:#1A1E2B;--line:#1E2433;--ph:#00FF66;--neon:#00F0FF;--wh:#F8FAFC;--mut:#94A3B8;
+--disp:'Syne','Arial Black',system-ui,sans-serif;--body:'Archivo','Segoe UI',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit;border-radius:0}
+html{scroll-behavior:smooth;scroll-padding-top:72px;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--wh);font:400 1rem/1.65 var(--body);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+::selection{background:var(--ph);color:var(--ink)}
+:focus-visible{outline:1px solid var(--ph);outline-offset:2px}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--ink)}::-webkit-scrollbar-thumb{background:var(--line)}::-webkit-scrollbar-thumb:hover{background:var(--ph)}
+.c{max-width:1600px;margin:0 auto;padding-inline:1rem}@media(min-width:640px){.c{padding-inline:2rem}}@media(min-width:1024px){.c{padding-inline:4rem}}
+.ml{font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.3em;color:var(--ph)}
+.chip{display:inline-block;border:1px solid var(--line);padding:.25rem .65rem;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:1rem 1.75rem;font:700 12px var(--mono);text-transform:uppercase;letter-spacing:.2em;cursor:pointer;border:1px solid transparent;transition:color .2s,background .2s,border-color .2s}
+.btn.p{background:var(--ph);color:var(--ink)}.btn.p:hover{background:var(--neon)}
+.btn.s{border-color:var(--line);color:var(--wh);background:none}.btn.s:hover{border-color:var(--ph);color:var(--ph)}
+.btn:disabled{opacity:.6;cursor:wait}
+.ph{color:var(--ph)}.st{-webkit-text-stroke:2px rgba(248,250,252,.85);color:transparent}.stg{-webkit-text-stroke:2px var(--ph);color:transparent}.gl{text-shadow:0 0 32px rgba(0,255,102,.5)}
+.grid{background-image:linear-gradient(rgba(30,36,51,.55) 1px,transparent 1px),linear-gradient(90deg,rgba(30,36,51,.55) 1px,transparent 1px);background-size:88px 88px}
+h1,h2,h3{font-family:var(--disp);font-weight:800;text-transform:uppercase;letter-spacing:-.02em;margin:0}
+/* nav */
+nav.top{position:fixed;inset:0 0 auto;height:calc(72px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);z-index:50;border-bottom:1px solid var(--line);background:rgba(7,8,11,.8);backdrop-filter:blur(16px)}
+nav.top .c{height:72px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:.7rem}.logo svg{width:30px;height:30px}
+.logo b{display:block;font:800 1.15rem/1 var(--disp);letter-spacing:-.02em}.logo small{display:block;font:400 9px var(--mono);letter-spacing:.42em;color:var(--mut);margin-top:3px}
+.links{display:none;gap:2rem}.links a{font:400 11px var(--mono);letter-spacing:.25em;color:var(--mut);transition:color .2s}.links a:hover{color:var(--ph)}
+.navr{display:flex;align-items:center;gap:1rem}.navr .btn{display:none;padding:.8rem 1.2rem}
+.burger{background:none;border:1px solid var(--line);color:var(--wh);width:42px;height:42px;font:700 18px var(--mono);cursor:pointer}
+.drop{display:none;position:fixed;top:calc(72px + env(safe-area-inset-top,0px));left:0;right:0;z-index:49;background:var(--ink);border-bottom:1px solid var(--line);padding:1rem 1.5rem 1.5rem}
+.drop.on{display:block}.drop a{display:block;font:800 1.7rem var(--disp);padding:.5rem 0;border-bottom:1px solid var(--line)}.drop a span{font:400 11px var(--mono);color:var(--ph);margin-right:1rem}
+@media(min-width:900px){.links{display:flex}.navr .btn{display:inline-flex}.burger{display:none}}
+/* hero */
+.hero{position:relative;min-height:100vh;min-height:100svh;overflow:hidden;display:flex;flex-direction:column}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%}
+.hero .grid{position:absolute;inset:0;opacity:.4}
+.hero .vig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 0%,#07080B 82%)}
+.hin{position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:center;padding-top:calc(72px + 1.5rem);pointer-events:none}
+.hin a,.hin button{pointer-events:auto}
+.hud{display:flex;justify-content:space-between;border-block:1px solid var(--line);padding:.75rem 0;font:400 10px var(--mono);letter-spacing:.3em;color:var(--mut);margin-bottom:2.5rem}
+.hud i{display:inline-block;width:6px;height:6px;background:var(--ph);margin-right:.5rem}.hud .r{display:none}@media(min-width:640px){.hud .r{display:block}}
+.bl{animation:blink 1.6s steps(2,start) infinite}@keyframes blink{50%{opacity:.3}}
+h1{line-height:.85;margin:1.25rem 0 2rem}
+h1 span.ln{display:block;overflow:hidden;padding-bottom:.04em}
+h1 span.ln span{display:block;font-size:min(calc((100vw - 32px)/9.78),9.3rem);transform:translateY(115%);animation:rise .9s cubic-bezier(.16,1,.3,1) forwards}
+@media(min-width:1024px){h1 span.ln span{font-size:min(calc((100vw - 128px)/9.78),9.3rem)}}
+h1 span.ln:nth-child(1) span{animation-delay:.25s}h1 span.ln:nth-child(2) span{animation-delay:.38s}h1 span.ln:nth-child(3) span{animation-delay:.51s}
+@keyframes rise{to{transform:none}}
+.hin p{max-width:36rem;color:var(--mut);margin:0 0 2rem}
+.row{display:flex;gap:1rem;flex-wrap:wrap}
+.band{position:relative;z-index:10;border-top:1px solid var(--line);padding:1rem 0}
+.band .c{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font:400 10px var(--mono);letter-spacing:.25em;color:var(--mut)}
+.band i{display:inline-block;width:6px;height:6px;background:var(--ph);margin-right:.6rem}
+/* marquee */
+.mq{border-block:1px solid var(--line);background:var(--panel);padding:1.25rem 0;overflow:hidden}
+.mq .t{display:flex;width:max-content;animation:mq 48s linear infinite}.mq:hover .t{animation-play-state:paused}
+.mq .g{display:flex;align-items:center;flex-shrink:0}.mq span{font:400 .85rem var(--mono);letter-spacing:.3em;color:var(--mut);white-space:nowrap}.mq i{width:6px;height:6px;background:var(--ph);margin:0 2rem;flex-shrink:0}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* sections */
+section{padding-block:5rem}@media(min-width:1024px){section{padding-block:7rem}}
+.alt{background:var(--panel)}
+.sh{display:grid;gap:1.5rem;margin-bottom:3.5rem}.sh h2{font-size:clamp(2.4rem,7vw,6rem);line-height:.9;margin-top:1rem}.sh p{color:var(--mut);max-width:26rem;margin:0}
+@media(min-width:1024px){.sh{grid-template-columns:1fr auto;align-items:end}.sh p{text-align:right}}
+.sg{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}@media(min-width:640px){.sg{grid-template-columns:1fr 1fr}}
+.sv{position:relative;background:var(--card);padding:2rem;transition:background .3s}@media(min-width:1024px){.sv{padding:2.5rem}}.sv:hover{background:var(--cardh)}
+.sv::before{content:"";position:absolute;top:0;left:0;height:2px;width:0;background:var(--ph);transition:width .5s}.sv:hover::before{width:100%}
+.sv .tp{display:flex;justify-content:space-between;align-items:center;color:var(--mut);margin-bottom:3rem;transition:color .3s}.sv:hover .tp{color:var(--ph)}
+.sv .tp span{font:400 11px var(--mono);letter-spacing:.2em}.sv svg{width:30px;height:30px}
+.sv h3{font-size:1.9rem;margin-bottom:.8rem}.sv p{color:var(--mut);margin:0 0 1.5rem}.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.pr{border-top:1px solid var(--line)}.pr:last-child{border-bottom:1px solid var(--line)}
+.pr{display:grid;gap:.5rem;padding:1.75rem 0;transition:background .2s}@media(min-width:640px){.pr{grid-template-columns:110px 1fr 1.2fr;padding:1.75rem 1.5rem;align-items:center}}
+.pr:hover{background:var(--card)}.pr .n{font:400 1.8rem var(--mono);color:var(--line);transition:color .2s}.pr:hover .n{color:var(--ph)}
+.pr h3{font-size:1.35rem}.pr p{margin:0;color:var(--mut);font-size:.92rem}
+.cs{display:grid;gap:2rem;margin-bottom:5rem;align-items:center}.cs:last-child{margin-bottom:0}
+@media(min-width:1024px){.cs{grid-template-columns:repeat(12,1fr);gap:3rem}.cs .im{grid-column:span 7}.cs .tx{grid-column:span 5}.cs:nth-child(even) .im{order:2}}
+.im{position:relative;display:block;width:100%;padding:0;border:1px solid var(--line);aspect-ratio:16/10;background:var(--card);cursor:pointer;color:var(--wh);overflow:hidden}
+.im::after{content:"";position:absolute;left:-8px;top:-8px;width:100%;height:100%;border:1px solid var(--ph);opacity:0;transition:opacity .3s;pointer-events:none}.im:hover::after{opacity:.6}
+.vis{position:absolute;inset:0;transition:transform .7s,filter .7s;filter:grayscale(.35)}.im:hover .vis{transform:scale(1.03);filter:none}
+.im .bd{position:absolute;left:0;top:0;z-index:2;background:rgba(7,8,11,.9);padding:.5rem .75rem;font:400 10px var(--mono);letter-spacing:.3em;color:var(--ph)}
+.tx h3{font-size:clamp(1.7rem,3vw,2.8rem);line-height:1;margin:.8rem 0 1rem}.tx p{color:var(--mut);margin:0 0 1.25rem}.tx .chips{margin-bottom:1.75rem}
+.md{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}
+.md.on{display:flex}.mp{position:relative;width:100%;max-width:48rem;max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line);animation:up .35s cubic-bezier(.16,1,.3,1)}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.mp .vis{position:relative;height:0;padding-bottom:43.75%;filter:none}.mb{padding:1.5rem}@media(min-width:640px){.mb{padding:2.5rem}}
+.mb h3{font-size:clamp(1.6rem,4vw,2.6rem);margin:.7rem 0 1rem}.mb p{color:var(--mut);margin:0 0 1.25rem}.mb .chips{margin-bottom:1.75rem}
+.x{position:absolute;right:1rem;top:1rem;z-index:3;width:40px;height:40px;background:rgba(7,8,11,.9);border:1px solid var(--line);color:var(--wh);font:700 16px var(--mono);cursor:pointer}.x:hover{border-color:var(--ph);color:var(--ph)}
+.ct{position:relative}.ct .grid{position:absolute;inset:0;opacity:.3;pointer-events:none}
+.ct .c{position:relative;display:grid;gap:4rem}@media(min-width:1024px){.ct .c{grid-template-columns:1fr 1fr;gap:5rem}}
+.ct h2{font-size:clamp(2.4rem,6vw,5.2rem);line-height:.9;margin:1rem 0 1.5rem}.ct .in{color:var(--mut);max-width:30rem;margin:0 0 2.5rem}
+.tl{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:1rem 0;font:400 12px var(--mono);letter-spacing:.1em}.tl span:first-child{color:var(--mut)}
+form{background:var(--card);border:1px solid var(--line);padding:1.5rem}@media(min-width:640px){form{padding:2.5rem}}
+.f2{display:grid;gap:1rem;margin-bottom:1rem}@media(min-width:640px){.f2{grid-template-columns:1fr 1fr}}
+label{display:block;margin-bottom:1rem}label span{display:block;font:400 10px var(--mono);letter-spacing:.25em;color:var(--mut);margin-bottom:.5rem}
+.f{width:100%;background:transparent;border:1px solid var(--line);padding:.75rem 1rem;font:400 .85rem var(--mono);color:var(--wh);transition:border-color .2s}.f::placeholder{color:#475569}.f:focus{border-color:var(--ph);outline:none}
+.sc{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem}@media(min-width:640px){.sc{grid-template-columns:repeat(4,1fr)}}
+.sc button{border:1px solid var(--line);background:none;color:var(--mut);padding:.7rem .3rem;font:400 11px var(--mono);text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:all .2s}
+.sc button:hover{border-color:var(--mut);color:var(--wh)}.sc button[aria-pressed="true"]{border-color:var(--ph);background:rgba(0,255,102,.1);color:var(--ph)}
+.fn{margin:1rem 0 0;font:400 10px var(--mono);letter-spacing:.2em;color:var(--mut);text-align:center}
+.toast{position:fixed;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:120;max-width:22rem;background:var(--card);border:1px solid var(--ph);padding:1rem 1.2rem;display:none}
+.toast.on{display:block;animation:up .3s}.toast.err{border-color:#ff4d4d}.toast b{display:block;font:700 12px var(--mono);letter-spacing:.2em;margin-bottom:.3rem;color:var(--ph)}.toast.err b{color:#ff4d4d}.toast span{font-size:.9rem;color:var(--mut)}
+footer{border-top:1px solid var(--line);padding-top:3.5rem}.ft{display:grid;gap:2rem;margin-bottom:3rem}@media(min-width:900px){.ft{grid-template-columns:1fr auto auto;align-items:center}}
+.ft p{color:var(--mut);font-size:.9rem;margin:.8rem 0 0;max-width:20rem}.ft .links{display:flex;flex-wrap:wrap}
+.bt{display:flex;flex-direction:column;gap:.5rem;justify-content:space-between;border-top:1px solid var(--line);padding:1.5rem 0;font:400 10px var(--mono);letter-spacing:.25em;color:var(--mut)}@media(min-width:640px){.bt{flex-direction:row}}
+.bt i{display:inline-block;width:6px;height:6px;background:var(--ph);margin:0 .5rem 1px}
+.up{display:inline-flex;align-items:center;gap:.8rem;font:400 11px var(--mono);letter-spacing:.25em;color:var(--mut);background:none;border:0;cursor:pointer}.up:hover{color:var(--ph)}.up b{width:36px;height:36px;border:1px solid var(--line);display:grid;place-items:center}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}h1 span.ln span{transform:none;animation:none}.mq .t,.bl{animation:none}.mp,.toast.on{animation:none}}
+</style>
+</head>
+<body>
+<nav class="top"><div class="c">
+<a class="logo" href="#top" data-testid="nav-logo"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="2" y="2" width="60" height="60" stroke="#1E2433" stroke-width="2.5"/><path d="M18 18L46 46M46 18L18 46" stroke="#00FF66" stroke-width="5" stroke-linecap="square"/><circle cx="32" cy="32" r="4.5" fill="#00F0FF"/></svg><span><b>CODE <span class="ph">MATRIX</span></b><small>SOLUTIONS</small></span></a>
+<div class="links"><a href="#services" data-testid="nav-link-services">SERVICES</a><a href="#process" data-testid="nav-link-process">PROCESS</a><a href="#contact" data-testid="nav-link-contact">CONTACT</a></div>
+<div class="navr"><a class="btn p" href="#contact" data-testid="nav-cta-start-project">START A PROJECT ↗</a><button class="burger" id="bg" aria-label="Open menu" aria-expanded="false" data-testid="nav-menu-toggle">☰</button></div>
+</div></nav>
+<div class="drop" id="dr"><a href="#services"><span>01</span>SERVICES</a><a href="#process"><span>02</span>PROCESS</a><a href="#contact"><span>03</span>CONTACT</a></div>
+
+<main id="top">
+<header class="hero">
+<canvas id="mx" aria-hidden="true"></canvas><div class="grid"></div><div class="vig"></div>
+<div class="c hin" id="hc">
+<div class="hud"><span>SYS.STATUS: <i></i><span class="bl">OPERATIONAL</span></span><span class="r">MODE: SOFTWARE &amp; WEB // SW · WEB</span></div>
+<div class="ml">SOFTWARE &amp; WEB DEVELOPMENT STUDIO</div>
+<h1 aria-label="Code Matrix Solutions"><span class="ln"><span>CODE</span></span><span class="ln"><span class="ph gl">MATRIX</span></span><span class="ln"><span class="st">SOLUTIONS</span></span></h1>
+<p>Modern software applications and high-performance websites — engineered end-to-end. From the first commit to the shipping product, one team owns the full stack: cloud, APIs and the browser.</p>
+<div class="row"><a class="btn p" href="#contact" data-testid="hero-cta-project">START A PROJECT</a><a class="btn s" href="#services" data-testid="hero-cta-services">WHAT WE BUILD ↓</a></div>
+</div>
+<div class="band"><div class="c"><span><i></i>02 SERVICE VERTICALS</span><span><i></i>COMMIT → PRODUCTION</span><span><i></i>ONE TEAM, FULL STACK</span></div></div>
+</header>
+
+<div class="mq" aria-hidden="true"><div class="t" id="mt"></div></div>
+
+<section id="services"><div class="c">
+<div class="sh"><div><div class="ml">[ 01 — CAPABILITIES ]</div><h2>WHAT WE <span class="ph">BUILD</span></h2></div><p>Two verticals, one integrated team. Product thinking and engineering discipline from kickoff to launch — never thrown over a wall.</p></div>
+<div class="sg">
+<article class="sv" data-testid="service-card-srv-01"><div class="tp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/></svg><span>SRV-01</span></div><h3>Software Development</h3><p>Scalable cloud backends, desktop suites and edge-AI systems — architected to ship and to scale.</p><div class="chips"><span class="chip">Python / FastAPI</span><span class="chip">Go</span><span class="chip">Rust</span><span class="chip">TensorFlow Lite</span><span class="chip">Docker / K8s</span></div></article>
+<article class="sv" data-testid="service-card-srv-02"><div class="tp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><span>SRV-02</span></div><h3>Web Development</h3><p>High-performance web platforms, dashboards and real-time portals built on the modern stack.</p><div class="chips"><span class="chip">React</span><span class="chip">Tailwind CSS</span><span class="chip">Three.js / WebGL</span><span class="chip">WebSockets</span><span class="chip">WebAssembly</span></div></article>
+</div></div></section>
+
+<section id="process" class="alt"><div class="c">
+<div class="sh"><div><div class="ml">[ 02 — PROCESS ]</div><h2>COMMIT <span class="stg">TO SHIP</span></h2></div><p>A disciplined five-stage pipeline. Every product leaves with documentation, a clean handover and a scaling path.</p></div>
+<div>
+<div class="pr" data-testid="process-step-01"><div class="n">01</div><h3>Discovery &amp; Product Spec Brief</h3><p>Requirements become user stories, wireframes and a technical roadmap — before a line of code is written.</p></div>
+<div class="pr" data-testid="process-step-02"><div class="n">02</div><h3>Architecture &amp; System Design</h3><p>Data models, service boundaries and infrastructure choices that keep the product fast and cheap to change.</p></div>
+<div class="pr" data-testid="process-step-03"><div class="n">03</div><h3>Iterative Build Sprints</h3><p>Weekly shipping cycles with working software you can click, test and review — no black boxes.</p></div>
+<div class="pr" data-testid="process-step-04"><div class="n">04</div><h3>QA, Security &amp; Performance Hardening</h3><p>Automated tests, load testing and security review before anything touches production.</p></div>
+<div class="pr" data-testid="process-step-05"><div class="n">05</div><h3>Launch, Monitoring &amp; Scale</h3><p>Zero-downtime deploys, observability dashboards and a growth-ready roadmap for what comes next.</p></div>
+</div></div></section>
+
+<section id="contact" class="ct"><div class="grid"></div><div class="c">
+<div><div class="ml">[ 03 — CONTACT ]</div><h2>TRANSMIT A <span class="ph gl">BRIEF</span></h2>
+<p class="in">Tell us what you are building. We reply with an engineering assessment — scope, architecture risks and a realistic path to production.</p>
+<div class="tl"><span>EMAIL</span><span>codematrixsol@gmail.com</span></div><div class="tl"><span>RESPONSE WINDOW</span><span>WITHIN 24 HOURS</span></div><div class="tl"><span>OPERATIONS</span><span>REMOTE-FIRST / WORLDWIDE</span></div></div>
+<form id="fm" novalidate>
+<div class="f2"><label><span>NAME*</span><input class="f" id="nm" placeholder="JANE ENGINEER" data-testid="contact-input-name"></label><label><span>EMAIL*</span><input class="f" id="em" type="email" placeholder="YOU@COMPANY.COM" data-testid="contact-input-email"></label></div>
+<label><span>COMPANY</span><input class="f" id="co" placeholder="OPTIONAL" data-testid="contact-input-company"></label>
+<span style="display:block;font:400 10px var(--mono);letter-spacing:.25em;color:var(--mut);margin-bottom:.5rem">PROJECT SCOPE</span>
+<div class="sc" id="sc"><button type="button" aria-pressed="true">Software</button><button type="button" aria-pressed="false">Web platform</button><button type="button" aria-pressed="false">Both</button><button type="button" aria-pressed="false">Not sure</button></div>
+<label><span>MESSAGE*</span><textarea class="f" id="ms" rows="5" placeholder="WHAT ARE WE BUILDING? TIMELINES, CONSTRAINTS, TARGETS..." data-testid="contact-input-message"></textarea></label>
+<button class="btn p" style="width:100%" type="submit" data-testid="contact-submit-button">SEND TRANSMISSION ↗</button>
+<p class="fn">NO SPAM, EVER</p>
+</form></div></section>
+</main>
+
+<footer><div class="c">
+<div class="ft"><div><a class="logo" href="#top"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="2" y="2" width="60" height="60" stroke="#1E2433" stroke-width="2.5"/><path d="M18 18L46 46M46 18L18 46" stroke="#00FF66" stroke-width="5" stroke-linecap="square"/><circle cx="32" cy="32" r="4.5" fill="#00F0FF"/></svg><span><b>CODE <span class="ph">MATRIX</span></b><small>SOLUTIONS</small></span></a><p>Software &amp; web development. Built to spec. Shipped to production.</p></div>
+<div class="links"><a href="#services">SERVICES</a><a href="#process">PROCESS</a><a href="#contact">CONTACT</a></div>
+<button class="up" id="up" data-testid="footer-back-to-top">BACK TO TOP <b>↑</b></button></div>
+<div class="bt"><span>© <span id="yr">2026</span> CODE MATRIX SOLUTIONS</span><span>ALL SYSTEMS <i></i>OPERATIONAL</span></div>
+</div></footer>
+
+<div class="toast" id="ts" role="status"><b></b><span></span></div>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+// marquee
+var items=['CLOUD-NATIVE BACKENDS','REACT / MODERN WEB','REAL-TIME APPS','API PLATFORMS','EDGE AI','WEBASSEMBLY','DEVOPS / CI-CD','PROGRESSIVE WEB APPS'],g='';
+items.forEach(function(t){g+='<span>'+t+'</span><i></i>'});
+$('mt').innerHTML='<div class="g">'+g+'</div><div class="g">'+g+'</div>';
+// nav
+var bg=$('bg'),dr=$('dr');
+bg.onclick=function(){var o=dr.classList.toggle('on');bg.textContent=o?'✕':'☰';bg.setAttribute('aria-expanded',o)};
+dr.addEventListener('click',function(){dr.classList.remove('on');bg.textContent='☰'});
+$('up').onclick=function(){scrollTo({top:0})};
+$('yr').textContent=new Date().getFullYear();
+// toast
+var ts=$('ts'),tt;
+function toast(t,d,err){ts.className='toast on'+(err?' err':'');ts.querySelector('b').textContent=t;ts.querySelector('span').textContent=d;clearTimeout(tt);tt=setTimeout(function(){ts.className='toast'},5000)}
+// form
+var scope='Software';
+$('sc').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;scope=b.textContent;[].forEach.call($('sc').children,function(x){x.setAttribute('aria-pressed',x===b)})});
+$('fm').addEventListener('submit',function(e){e.preventDefault();
+var n=$('nm').value.trim(),m=$('em').value.trim(),s=$('ms').value.trim(),c=$('co').value.trim();
+if(!n||!m||!s)return toast('SEND ERROR','Name, email and message are required.',true);
+if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m))return toast('SEND ERROR','Enter a valid email address.',true);
+var ref='CMS-'+Math.random().toString(36).slice(2,8).toUpperCase();
+var body='Name: '+n+'\nEmail: '+m+'\nCompany: '+(c||'-')+'\nScope: '+scope+'\n\n'+s;
+location.href='mailto:codematrixsol@gmail.com?subject='+encodeURIComponent('New project enquiry '+ref+' — '+n)+'&body='+encodeURIComponent(body);
+toast('TRANSMISSION READY','Reference '+ref+'. Send the drafted email to complete your brief.')});
+// canvas
+var cv=$('mx'),x=cv.getContext('2d'),W,H,N=[],mx=-999,my=-999,still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function size(){var r=cv.parentNode.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;x.setTransform(d,0,0,d,0,0);
+var n=Math.min(120,Math.floor(W*H/17000));N=[];for(var i=0;i<n;i++)N.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.56,vy:(Math.random()-.5)*.56,r:.7+Math.random()*1.4})}
+function draw(){x.clearRect(0,0,W,H);
+for(var i=0;i<N.length;i++){var a=N[i];if(!still){a.x+=a.vx;a.y+=a.vy;if(a.x<0||a.x>W)a.vx*=-1;if(a.y<0||a.y>H)a.vy*=-1}
+x.fillStyle='rgba(0,255,102,.7)';x.beginPath();x.arc(a.x,a.y,a.r,0,6.283);x.fill();
+for(var j=i+1;j<N.length;j++){var b=N[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<140){x.strokeStyle='rgba(0,255,102,'+((1-d/140)*.26)+')';x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke()}}
+var dc=Math.hypot(a.x-mx,a.y-my);if(dc<220){x.strokeStyle='rgba(0,240,255,'+((1-dc/220)*.55)+')';x.beginPath();x.moveTo(a.x,a.y);x.lineTo(mx,my);x.stroke()}}
+if(mx>-900){x.fillStyle='#00F0FF';x.beginPath();x.arc(mx,my,2.5,0,6.283);x.fill();x.strokeStyle='rgba(0,240,255,.35)';x.beginPath();x.arc(mx,my,14,0,6.283);x.stroke()}
+if(!still)requestAnimationFrame(draw)}
+var hero=cv.parentNode;
+hero.addEventListener('pointermove',function(e){var r=hero.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;cv.style.transform='translate('+((mx/W-.5)*-26)+'px,'+((my/H-.5)*-18)+'px)'});
+hero.addEventListener('pointerleave',function(){mx=my=-999});
+cv.style.transition='transform .6s ease-out';
+addEventListener('resize',function(){size();if(still)draw()});size();draw();
+// hero parallax
+var hc=$('hc');if(!still)addEventListener('scroll',function(){var s=Math.min(scrollY,700);hc.style.transform='translateY('+(s/700*130)+'px)';hc.style.opacity=1-s/700*.85},{passive:true});
+})();
+</script>
+</body>
+</html>
