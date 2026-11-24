@@ -114,6 +114,13 @@ footer{border-top:1px solid var(--line);padding-top:3.5rem}.ft{display:grid;gap:
 .bt{display:flex;flex-direction:column;gap:.5rem;justify-content:space-between;border-top:1px solid var(--line);padding:1.5rem 0;font:400 10px var(--mono);letter-spacing:.25em;color:var(--mut)}@media(min-width:640px){.bt{flex-direction:row}}
 .bt i{display:inline-block;width:6px;height:6px;background:var(--ph);margin:0 .5rem 1px}
 .up{display:inline-flex;align-items:center;gap:.8rem;font:400 11px var(--mono);letter-spacing:.25em;color:var(--mut);background:none;border:0;cursor:pointer}.up:hover{color:var(--ph)}.up b{width:36px;height:36px;border:1px solid var(--line);display:grid;place-items:center}
+.sl{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}@media(min-width:640px){.sl{grid-template-columns:1fr 1fr}}
+.sl a{position:relative;display:block;background:var(--card);padding:2rem;transition:background .3s}@media(min-width:1024px){.sl a{padding:2.5rem}}
+.sl a:hover{background:var(--cardh)}.sl a::before{content:"";position:absolute;top:0;left:0;height:2px;width:0;background:var(--ph);transition:width .5s}.sl a:hover::before{width:100%}
+.sl .tp{display:flex;justify-content:space-between;font:400 11px var(--mono);letter-spacing:.2em;color:var(--mut);margin-bottom:3rem}
+.sl h3{font-size:clamp(1.8rem,3.5vw,2.8rem);display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.sl h3 b{color:var(--ph);font:400 1.6rem var(--mono);transition:transform .3s}.sl a:hover h3 b{transform:translate(4px,-4px)}
+.sl p{color:var(--mut);margin:.6rem 0 0;font:400 12px var(--mono);letter-spacing:.1em;word-break:break-all}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}h1 span.ln span{transform:none;animation:none}.mq .t,.bl{animation:none}.mp,.toast.on{animation:none}}
 </style>
 </head>
@@ -157,8 +164,15 @@ footer{border-top:1px solid var(--line);padding-top:3.5rem}.ft{display:grid;gap:
 <div class="pr" data-testid="process-step-05"><div class="n">05</div><h3>Launch, Monitoring &amp; Scale</h3><p>Zero-downtime deploys, observability dashboards and a growth-ready roadmap for what comes next.</p></div>
 </div></div></section>
 
-<section id="contact" class="ct"><div class="grid"></div><div class="c">
-<div><div class="ml">[ 03 — CONTACT ]</div><h2>TRANSMIT A <span class="ph gl">BRIEF</span></h2>
+<section id="social"><div class="c">
+<div class="sh"><div><div class="ml">[ 03 — NETWORK ]</div><h2>FOLLOW THE <span class="ph">SIGNAL</span></h2></div><p>Find Code Matrix Solutions on LinkedIn and Instagram.</p></div>
+<div class="sl">
+<a href="https://www.linkedin.com/company/code-matrix-solutions" target="_blank" rel="noopener noreferrer" data-testid="social-linkedin"><div class="tp"><span>SOC-01</span><span>PROFESSIONAL</span></div><h3>LinkedIn <b aria-hidden="true">↗</b></h3><p>code-matrix-solutions</p></a>
+<a href="https://www.instagram.com/codematrixsolutions/" target="_blank" rel="noopener noreferrer" data-testid="social-instagram"><div class="tp"><span>SOC-02</span><span>VISUAL</span></div><h3>Instagram <b aria-hidden="true">↗</b></h3><p>@codematrixsolutions</p></a>
+</div></div></section>
+
+<section id="contact" class="alt ct"><div class="grid"></div><div class="c">
+<div><div class="ml">[ 04 — CONTACT ]</div><h2>TRANSMIT A <span class="ph gl">BRIEF</span></h2>
 <p class="in">Tell us what you are building. We reply with an engineering assessment — scope, architecture risks and a realistic path to production.</p>
 <div class="tl"><span>EMAIL</span><span>codematrixsol@gmail.com</span></div><div class="tl"><span>RESPONSE WINDOW</span><span>WITHIN 24 HOURS</span></div><div class="tl"><span>OPERATIONS</span><span>REMOTE-FIRST / WORLDWIDE</span></div></div>
 <form id="fm" novalidate>
